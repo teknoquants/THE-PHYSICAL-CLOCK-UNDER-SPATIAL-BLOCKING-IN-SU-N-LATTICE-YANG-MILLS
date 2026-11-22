@@ -1,0 +1,11 @@
+W2.Common.free_clock_sinc_bounds (L : ℕ) (hL : 2 ≤ L) :
+  have t := Real.pi / ↑L;
+  W2.Common.freeClock L = Real.sin t / t ∧
+    0 ≤ W2.Common.freeClock L - (1 - t ^ 2 / 6) ∧
+      W2.Common.freeClock L - (1 - t ^ 2 / 6) ≤ t ^ 4 / 120 ∧
+        ∀ (E₀ m : ℝ),
+          0 ≤ m →
+            W2.Common.boxClockSq L E₀ (E₀ + m) (E₀ + √(m ^ 2 + (2 * Real.sin (W2.Common.p₁ L / 2)) ^ 2)) =
+              W2.Common.freeClock L ^ 2
+'W2.Common.free_clock_sinc_bounds' depends on axioms: [propext, Classical.choice, Quot.sound]
+"W2 packet c175533bf47c0ce523111babe904be8bf6f160603883cae970810c8b1b1a7adf"

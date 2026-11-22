@@ -1,0 +1,367 @@
+-- W2-PACKET {"audit":["W2.Common.free_clock_sinc_bounds","W2.W2aR.time_unit_scaling","W2.W2aR.kinetic_ratio_clock"],"editable":["W2.W2aR.time_unit_scaling","W2.W2aR.kinetic_ratio_clock"],"format":2,"mode":"fill","module":"W2/W2aR/TimeUnit.lean","review":"134a4dabe2cab4082188264678991daa489d80518781b8bd7fa41eeb6afdb84f","unit":"W2aR"}
+/-
+SPDX-License-Identifier: MIT
+MIT License
+
+Copyright (c) 2026 Roger Cooperman; A.E. Petrunina V.V.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-/
+
+module
+
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+public import Mathlib.Analysis.SpecialFunctions.Log.Basic
+public import Mathlib.Analysis.Calculus.ContDiff.Defs
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
+public import Mathlib.Analysis.Calculus.Deriv.MeanValue
+public import Mathlib.Analysis.Calculus.Deriv.Pow
+public import Mathlib.Tactic
+public import Mathlib.Analysis.InnerProductSpace.Symmetric
+public import Mathlib.LinearAlgebra.Eigenspace.Basic
+
+@[expose] public section
+
+-- W2 MODULE BEGIN W2/Common/Basic.lean
+/-! Shared W2a-R conventions. Every clock takes the **squared** coupling `x = g²`.
+Index `k` increases from the ultraviolet toward the infrared. -/
+namespace W2.Common
+
+abbrev Clock := ℝ → ℝ
+abbrev Trajectory := ℕ → ℝ
+
+noncomputable def A (N : ℕ) : ℝ := 11 * (N : ℝ) * Real.log 2 / (12 * Real.pi ^ 2)
+
+def weak (xs x : ℝ) : Prop := 0 < x ∧ x ≤ xs
+
+noncomputable def fullClock (c : Clock) (x : ℝ) : ℝ := 1 / c x
+
+def truncClock (c₁ x : ℝ) : ℝ := 1 - c₁ * x
+
+/-- `speed h x z` is the speed measured after blocking with input clock `z`.
+The output time unit is determined by matching to the reference at `y`. -/
+noncomputable def matchedClock {ι : Type*} (c : Clock) (speed : ι → ℝ → ℝ → ℝ)
+    (h : ι) (x y z : ℝ) : ℝ := speed h x z / c y
+
+/-- Physical response once time covariance and exact preservation of speed are imposed. -/
+noncomputable def physicalRatio (c : Clock) (x y z : ℝ) : ℝ := z * c x / c y
+
+noncomputable def oneLoopBack (b a : ℝ) (n : ℕ) : ℝ := 1 / (b + a * n)
+
+/-- Paper's quadratic product includes both endpoints `0` and `K`. -/
+noncomputable def driftProduct (b a κ : ℝ) (K : ℕ) : ℝ :=
+  ∏ n ∈ Finset.range (K + 1), (1 + κ * oneLoopBack b a n)
+
+def aPlus (a B xs : ℝ) : ℝ := a + B * xs
+
+noncomputable def stepQ (a B xs : ℝ) : ℝ := 1 / (1 - aPlus a B xs * xs)
+
+noncomputable def clockFloor (s M xs : ℝ) : ℝ := 1 - |s| * xs - M * xs ^ 2
+
+noncomputable def stepConstant (a B xs s M : ℝ) : ℝ :=
+  (|s| * aPlus a B xs * stepQ a B xs + M * (1 + stepQ a B xs ^ 2)) /
+    clockFloor s M xs
+
+noncomputable def matchConstant (a B xs c₁ Mc : ℝ) : ℝ :=
+  Mc * (1 + stepQ a B xs ^ 2) / clockFloor (-c₁) Mc xs
+
+def blockConstant (C M xs : ℝ) : ℝ := C + M + C * M * xs ^ 2
+
+def stepData (a B xs x y : ℝ) : Prop :=
+  weak xs x ∧ weak xs y ∧ 0 ≤ B ∧ 0 < a - B * xs ∧ aPlus a B xs * xs < 1 ∧
+  |1 / y - 1 / x + a| ≤ B * x
+
+/-- Uniform remainder of a calibrated clock on the weak interval. -/
+def hasRemainder (u : Clock) (xs s M : ℝ) : Prop :=
+  0 ≤ M ∧ ∀ x, weak xs x → |u x - (1 + s * x)| ≤ M * x ^ 2
+
+/-- Axial lattice momentum in units of one fine link. -/
+noncomputable def p₁ (L : ℕ) : ℝ := 2 * Real.pi / L
+
+/-- Quotient of free lattice energy `2 sin(p/2)` by continuum momentum. -/
+noncomputable def freeClock (L : ℕ) : ℝ := 2 * Real.sin (p₁ L / 2) / p₁ L
+
+/-- Squared clock from energy gaps in a fixed momentum and centre-flux sector.
+The zero-momentum excitation is on the same branch as the moving excitation. -/
+noncomputable def boxClockSq (L : ℕ) (E₀ Erest Emoving : ℝ) : ℝ :=
+  ((Emoving - E₀) ^ 2 - (Erest - E₀) ^ 2) / (p₁ L) ^ 2
+
+end W2.Common
+-- W2 MODULE END W2/Common/Basic.lean
+
+-- W2 MODULE BEGIN W2/Common/Hypotheses.lean
+/-! Physical and trajectory inputs used by W2a-R. The structures are predicates on
+specified data. Constructing them for a particular gauge theory is a separate task. -/
+namespace W2.Common
+
+/-- R.10-type regularity on the closed squared-coupling interval, using a normalized
+extension to zero. `M` is uniform in `x`. The direct and inverse remainders differ. -/
+structure ClockRegularityHyp (c : Clock) (xs c₁ : ℝ) : Prop where
+  cutoff_pos : 0 < xs
+  normalized : c 0 = 1
+  positive : ∀ x, weak xs x → 0 < c x
+  smooth : ContDiffOn ℝ 2 c (Set.Icc 0 xs)
+  remainder : ∃ M : ℝ, hasRemainder c xs c₁ M
+
+/-- The extra cubic remainder in the published W2a Theorem 15, with `x = g²`. -/
+def cubicClockExpansion (c : Clock) (xs c₁ : ℝ) : Prop :=
+  ∃ c₂ D : ℝ, 0 ≤ D ∧ ∀ x, weak xs x →
+    |c x - (1 + c₁ * x + c₂ * x ^ 2)| ≤ D * x ^ 3
+
+/-- Hypotheses (i) and (ii) of W2a Theorem 15. `h` ranges over every admitted
+incoming effective datum. `speed` is measured in physical units. -/
+structure DispersionHyp {ι : Type*} (c : Clock) (speed : ι → ℝ → ℝ → ℝ)
+    (xs : ℝ) : Prop where
+  preserves : ∀ h x, weak xs x → speed h x 1 = c x
+  time_covariant : ∀ h x z, weak xs x → 0 < z → speed h x z = z * speed h x 1
+
+/-- Backward inverse-coupling increment, imposed stepwise through a finite weak run.
+No bound on its summed losses is supplied by this structure. -/
+structure RunningBoundHyp (x : Trajectory) (J : ℕ) (xs amin : ℝ) : Prop where
+  amin_pos : 0 < amin
+  cutoff_pos : 0 < xs
+  values : ∀ k ≤ J, weak xs (x k)
+  decrement : ∀ k < J, amin ≤ 1 / x k - 1 / x (k + 1)
+
+/-- The interacting finite-box estimate R.5 as an optional input. Both constants
+are chosen before the box size and the coupling. -/
+def finiteVolumeBound (c : Clock) (cL : ℕ → Clock) (xs : ℝ) : Prop :=
+  ∃ U V : ℝ, 0 ≤ U ∧ 0 ≤ V ∧ ∀ L : ℕ, 2 ≤ L → ∀ x, weak xs x →
+    |cL L x - c x| ≤ (U + V * x ^ 2) / (L : ℝ) ^ 2
+
+end W2.Common
+-- W2 MODULE END W2/Common/Hypotheses.lean
+
+-- W2 MODULE BEGIN W2/Common/Trig.lean
+/-! Free axial lattice clock, shared by W2b.10 and W2a-R.5 at order zero. -/
+namespace W2.Common
+
+/-- The quartic cosine upper polynomial follows by integration from the cubic sine lower bound. -/
+private theorem cos_le_quartic {x : ℝ} (hx : 0 ≤ x) :
+    Real.cos x ≤ 1 - x ^ 2 / 2 + x ^ 4 / 24 := by
+  let f (t : ℝ) := 1 - t ^ 2 / 2 + t ^ 4 / 24 - Real.cos t
+  have hd (t : ℝ) : deriv f t = -t + t ^ 3 / 6 + Real.sin t := by
+    simp (disch := fun_prop) [f]
+    ring
+  have hm : MonotoneOn f (Set.Ici 0) := by
+    apply monotoneOn_of_deriv_nonneg (convex_Ici 0) (by fun_prop)
+    · exact fun _ _ => by dsimp [f]; fun_prop
+    · intro t ht
+      rw [hd]
+      have ht' : 0 ≤ t := interior_subset ht
+      linarith [Real.sin_ge_sub_cube ht']
+  have he := hm (show (0 : ℝ) ∈ Set.Ici 0 by simp) hx hx
+  simpa [f, sub_nonneg] using he
+
+private theorem sin_le_quintic {x : ℝ} (hx : 0 ≤ x) :
+    Real.sin x ≤ x - x ^ 3 / 6 + x ^ 5 / 120 := by
+  let f (t : ℝ) := t - t ^ 3 / 6 + t ^ 5 / 120 - Real.sin t
+  have hd (t : ℝ) : deriv f t = 1 - t ^ 2 / 2 + t ^ 4 / 24 - Real.cos t := by
+    simp (disch := fun_prop) [f]
+    ring
+  have hm : MonotoneOn f (Set.Ici 0) := by
+    apply monotoneOn_of_deriv_nonneg (convex_Ici 0) (by fun_prop)
+    · exact fun _ _ => by dsimp [f]; fun_prop
+    · intro t ht
+      rw [hd]
+      exact sub_nonneg.mpr (cos_le_quartic (interior_subset ht))
+  have he := hm (show (0 : ℝ) ∈ Set.Ici 0 by simp) hx hx
+  simpa [f, sub_nonneg] using he
+
+/-- For every periodic side `L ≥ 2`, the free clock is exactly sinc. Its error after
+subtracting `1 − (π/L)²/6` is between zero and `(π/L)⁴/120`. The last clause
+recovers its square from free dispersion for any energy origin and rest mass. -/
+theorem free_clock_sinc_bounds (L : ℕ) (hL : 2 ≤ L) :
+    let t := Real.pi / (L : ℝ)
+    freeClock L = Real.sin t / t ∧
+      0 ≤ freeClock L - (1 - t ^ 2 / 6) ∧
+      freeClock L - (1 - t ^ 2 / 6) ≤ t ^ 4 / 120 ∧
+      (∀ E₀ m : ℝ, 0 ≤ m → boxClockSq L E₀ (E₀ + m)
+        (E₀ + Real.sqrt (m ^ 2 + (2 * Real.sin (p₁ L / 2)) ^ 2)) = (freeClock L) ^ 2) := by
+-- W2 PROOF BEGIN W2.Common.free_clock_sinc_bounds
+  let t := Real.pi / (L : ℝ)
+  change freeClock L = Real.sin t / t ∧ _
+  have hL' : 0 < (L : ℝ) := by exact_mod_cast (show 0 < L by omega)
+  have ht : 0 < t := div_pos Real.pi_pos hL'
+  have hp : p₁ L = 2 * t := by unfold p₁ t; ring
+  have he : freeClock L = Real.sin t / t := by
+    rw [freeClock, hp, show 2 * t / 2 = t by ring]
+    field_simp
+  rw [he]
+  refine ⟨rfl, ?_, ?_, ?_⟩
+  · apply sub_nonneg.mpr
+    apply (le_div_iff₀ ht).mpr
+    linarith only [Real.sin_ge_sub_cube ht.le, show (1 - t ^ 2 / 6) * t = t - t ^ 3 / 6 by ring]
+  · apply sub_le_iff_le_add.mpr
+    apply (div_le_iff₀ ht).mpr
+    linarith only [sin_le_quintic ht.le,
+      show (t ^ 4 / 120 + (1 - t ^ 2 / 6)) * t = t - t ^ 3 / 6 + t ^ 5 / 120 by ring]
+  · intro E₀ m _
+    rw [← he, boxClockSq, freeClock, add_sub_cancel_left, add_sub_cancel_left,
+      Real.sq_sqrt (by positivity), add_sub_cancel_left, div_pow]
+-- W2 PROOF END W2.Common.free_clock_sinc_bounds
+
+end W2.Common
+-- W2 MODULE END W2/Common/Trig.lean
+
+-- W2 MODULE BEGIN W2/W2aR/Estimates.lean
+namespace W2.W2aR
+open W2.Common
+
+structure StepBounds (a B xs x y : ℝ) : Prop where
+  x_pos : 0 < x
+  y_pos : 0 < y
+  xs_pos : 0 < xs
+  ap_pos : 0 < aPlus a B xs
+  q_pos : 0 < stepQ a B xs
+  inc : x ≤ y
+  factor : y ≤ stepQ a B xs * x
+  jump : y - x ≤ aPlus a B xs * stepQ a B xs * x ^ 2
+  lower : a - B * xs ≤ 1 / x - 1 / y
+
+theorem stepBounds {a B xs x y : ℝ} (h : stepData a B xs x y) : StepBounds a B xs x y := by
+  obtain ⟨⟨hx,hxs⟩,⟨hy,hys⟩,hB,hm,hmax,hd⟩ := h
+  let d := 1 / x - 1 / y
+  have d0 : 0 < xs := hx.trans_le hxs
+  have dmin : a - B*xs ≤ d := by dsimp [d]; linarith [(abs_le.mp hd).2, mul_le_mul_of_nonneg_left hxs hB]
+  have dmax : d ≤ aPlus a B xs := by dsimp [d,aPlus]; linarith [(abs_le.mp hd).1, mul_le_mul_of_nonneg_left hxs hB]
+  have hdpos := hm.trans_le dmin
+  have hap := hdpos.trans_le dmax
+  have hid : d * x * y = y - x := by dsimp [d]; field_simp
+  have hinc : x ≤ y := by nlinarith [mul_nonneg (mul_nonneg hdpos.le hx.le) hy.le]
+  have he : 0 < 1-aPlus a B xs * xs := by linarith
+  have hq : 0 < stepQ a B xs := one_div_pos.mpr he
+  have hxf : y ≤ stepQ a B xs * x := by
+    rw [stepQ, one_div_mul_eq_div, le_div_iff₀ he]
+    have hp : d*x ≤ aPlus a B xs * xs := mul_le_mul dmax hxs hx.le hap.le
+    nlinarith [mul_le_mul_of_nonneg_right hp hy.le]
+  refine ⟨hx,hy,d0,hap,hq,hinc,hxf,?_,dmin⟩
+  calc y-x = d*x*y := hid.symm
+       _ ≤ aPlus a B xs * x * (stepQ a B xs * x) := by gcongr
+       _ = _ := by ring
+
+theorem calibration_floor {u : Clock} {s M xs x : ℝ} (h : hasRemainder u xs s M)
+    (hx : weak xs x) : clockFloor s M xs ≤ u x := by
+  obtain ⟨hM,hr⟩ := h
+  have e := (abs_le.mp (hr x hx)).1
+  have a : |s*x| ≤ |s| * xs := by rw [abs_mul,abs_of_pos hx.1]; gcongr; exact hx.2
+  have b : M*x^2 ≤ M*xs^2 := by gcongr; exact hx.1.le; exact hx.2
+  unfold clockFloor
+  linarith [neg_abs_le (s*x)]
+
+theorem clockEstimate {u : Clock} {a B xs x y s M : ℝ} (step : stepData a B xs x y)
+    (rest : hasRemainder u xs s M) (floorpos : 0 < clockFloor s M xs) :
+    |u y / u x - 1| ≤ stepConstant a B xs s M * x^2 := by
+  have b := stepBounds step
+  have lower := calibration_floor rest step.1
+  have hp := floorpos.trans_le lower
+  let Q := stepQ a B xs
+  let C := |s| * aPlus a B xs * Q + M * (1 + Q^2)
+  have hc : 0 ≤ C := by dsimp [C]; have := b.ap_pos; have : 0 < Q := b.q_pos; have := rest.1; positivity
+  have d : |u y-u x| ≤ C*x^2 := by
+    calc |u y-u x| = |(u y-(1+s*y)) + s*(y-x) - (u x-(1+s*x))| := by ring_nf
+         _ ≤ |u y-(1+s*y)| + |s*(y-x)| + |u x-(1+s*x)| :=
+           by
+           rw [sub_eq_add_neg (_ + _)]
+           exact (abs_add_le ..).trans (by rw [abs_neg]; gcongr; exact abs_add_le ..)
+         _ ≤ M*(Q*x)^2 + |s| * (aPlus a B xs*Q*x^2) + M*x^2 := by
+           rw [abs_mul,abs_of_nonneg (sub_nonneg.mpr b.inc)]
+           have hy2 : y^2 ≤ (Q*x)^2 := by gcongr; exact b.y_pos.le; exact b.factor
+           exact add_le_add (add_le_add ((rest.2 y step.2.1).trans (mul_le_mul_of_nonneg_left hy2 rest.1)) (mul_le_mul_of_nonneg_left b.jump (abs_nonneg s))) (rest.2 x step.1)
+         _ = _ := by dsimp [C]; ring
+  rw [show u y / u x - 1 = (u y-u x) / u x by field_simp, abs_div, abs_of_pos hp]
+  change |u y-u x| / u x ≤ C / clockFloor s M xs * x^2
+  rw [div_mul_eq_mul_div]
+  exact div_le_div₀ (mul_nonneg hc (sq_nonneg _)) d floorpos lower
+
+end W2.W2aR
+-- W2 MODULE END W2/W2aR/Estimates.lean
+
+-- W2 MODULE BEGIN W2/W2aR/TimeUnit.lean
+namespace W2.W2aR
+
+/-- A gap above the entire ground eigenspace. Multiplicity within a level is allowed. -/
+def firstGap {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    (H : Module.End ℂ E) (e δ : ℝ) : Prop :=
+  0 < δ ∧ H.HasEigenvalue (e : ℂ) ∧ H.HasEigenvalue ((e + δ : ℝ) : ℂ) ∧
+    ∀ t : ℝ, H.HasEigenvalue (t : ℂ) → e ≤ t ∧ (e < t → e + δ ≤ t)
+
+/-- W2a Prop. 1. Quantification includes self-adjoint Hamiltonians with a
+multiple ground level. The gap clause applies whenever there is a second level. -/
+def time_unit_scaling.statement : Prop :=
+  ∀ (E : Type) [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    [FiniteDimensional ℂ E] (T V : Module.End ℂ E),
+    T.IsSymmetric → V.IsSymmetric → ∀ gE gB : ℝ, 0 < gE → 0 < gB →
+    let x := gE * gB
+    let ξ := gE / gB
+    let H := ((x / 2 : ℝ) : ℂ) • T + ((1 / x : ℝ) : ℂ) • V
+    let Hξ := ((gE ^ 2 / 2 : ℝ) : ℂ) • T + ((1 / gB ^ 2 : ℝ) : ℂ) • V
+    Hξ = (ξ : ℂ) • H ∧
+    (∀ (e : ℝ) (v : E), Hξ.HasEigenvector ((ξ * e : ℝ) : ℂ) v ↔ H.HasEigenvector (e : ℂ) v) ∧
+    (∀ e δ : ℝ, firstGap Hξ (ξ * e) (ξ * δ) ↔ firstGap H e δ)
+
+/-- W2a Cor. 2. Squared couplings `x,y`, fine spacing `a`, and two positive clocks.
+The certificate inequality fixes the orientation of the time ratio. -/
+def kinetic_ratio_clock.statement : Prop :=
+  ∀ x y a z z' gap m η : ℝ, 0 < x → 0 < y → 0 < a → 0 < z → 0 < z' →
+    let ck := x / (2 * a)
+    let ck' := y / (2 * (2 * a))
+    (z * gap) / a = z * (gap / a) ∧
+    2 * ck / ck' = 4 * x / y ∧
+    2 * (z * ck) / (z' * ck') = (z / z') * (2 * ck / ck') ∧
+    ((1 - η) * (z' * m) ≤ z * (gap / a) ↔ (1 - η) * (z' / z) * m ≤ gap / a)
+
+end W2.W2aR
+
+-- W2 IMPLEMENTATION
+namespace W2.W2aR
+open Module.End
+private theorem eig_scale {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    (H : Module.End ℂ E) {z : ℝ} (hz : 0 < z) (e : ℝ) (v : E) :
+    ((z : ℂ) • H).HasEigenvector ((z * e : ℝ) : ℂ) v ↔ H.HasEigenvector (e : ℂ) v := by
+  have hn : (z : ℂ) ≠ 0 := by exact_mod_cast hz.ne'
+  simp only [hasEigenvector_iff, mem_eigenspace_iff, LinearMap.smul_apply, Complex.ofReal_mul,
+    mul_smul, smul_right_inj hn]
+
+private theorem eigval_scale {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    (H : Module.End ℂ E) {z : ℝ} (hz : 0 < z) (e : ℝ) :
+    ((z : ℂ) • H).HasEigenvalue ((z * e : ℝ) : ℂ) ↔ H.HasEigenvalue (e : ℂ) := by
+  constructor <;> intro he <;> obtain ⟨v,hv⟩ := he.exists_hasEigenvector
+  · exact hasEigenvalue_of_hasEigenvector ((eig_scale H hz e v).mp hv)
+  · exact hasEigenvalue_of_hasEigenvector ((eig_scale H hz e v).mpr hv)
+
+theorem time_unit_scaling : time_unit_scaling.statement := by
+-- W2 PROOF BEGIN W2.W2aR.time_unit_scaling
+  sorry
+-- W2 PROOF END W2.W2aR.time_unit_scaling
+
+theorem kinetic_ratio_clock : kinetic_ratio_clock.statement := by
+-- W2 PROOF BEGIN W2.W2aR.kinetic_ratio_clock
+  sorry
+-- W2 PROOF END W2.W2aR.kinetic_ratio_clock
+
+end W2.W2aR
+-- W2 MODULE END W2/W2aR/TimeUnit.lean
+
+example : W2.W2aR.time_unit_scaling.statement := W2.W2aR.time_unit_scaling
+example : W2.W2aR.kinetic_ratio_clock.statement := W2.W2aR.kinetic_ratio_clock
+#print axioms W2.Common.free_clock_sinc_bounds
+#print axioms W2.W2aR.time_unit_scaling
+#print axioms W2.W2aR.kinetic_ratio_clock
+#eval "W2 packet 4c621544ce2f5c2e1ebe71d723db33d139b4fe3ad3e4183a8043659f28c9cd65"

@@ -1,0 +1,713 @@
+{
+  "python": "3.12.14",
+  "manuscript_sha256": "415100a560c401bef64ca0a618961aa26f964b3ee131f0ab69c13ff613c3ecbc",
+  "stages": {
+    "Manuscript": {
+      "status": "PASS",
+      "detail": "10 numbered statements, 10 byte-identical Appendix B modules, and all 17 theorem links in Table 3."
+    },
+    "Baseline": {
+      "status": "PASS",
+      "detail": "46 of 46 checks in seven original programs."
+    },
+    "Numerical data": {
+      "status": "PASS",
+      "detail": "Compared all six freshly generated CSVs with the released data."
+    },
+    "Coverage": {
+      "status": "PASS",
+      "detail": "21 distinct rows cover the release inventory, supplemental results and open inputs."
+    },
+    "Regression controls": {
+      "status": "PASS",
+      "detail": "Six controls exercised altered claims, embedded proof text, printed coefficients, axiom records and open-input classifications."
+    },
+    "Lean": {
+      "status": "PASS",
+      "detail": "Fresh Lean 4.36.0 processes accepted all 17 frozen proofs, all 20 supporting proofs and 6 supplemental proofs. The six returned modules and isolated final packet also passed."
+    }
+  },
+  "claims": [
+    {
+      "label": "§1–2",
+      "title": "Time-unit and gap-ratio scaling",
+      "target": "W2a Prop. 1 / Cor. 2",
+      "status": "FORMAL",
+      "scope": "Symmetric finite-dimensional operators and positive time units.",
+      "test": "check_clock.py / time_unit",
+      "lean": [
+        "time_unit_scaling",
+        "kinetic_ratio_clock"
+      ],
+      "observed": "Exact coefficient and gap-ratio identities; three positive scalings of a degenerate ground space.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Theorem 2.1",
+      "title": "Matching errors for two calibrations",
+      "target": "R.1",
+      "status": "FORMAL",
+      "scope": "Physical identification of F requires speed preservation and time covariance.",
+      "test": "check_clock.py / matching",
+      "lean": [
+        "step_error_schemeA",
+        "step_error_schemeB",
+        "clock_step_bound"
+      ],
+      "observed": "108 admissible rational steps checked exactly, including zero and nonzero truncation residuals.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Theorem 3.1",
+      "title": "Uniform endpoint limit",
+      "target": "R.2",
+      "status": "CONDITIONAL",
+      "scope": "The physical interpretation assumes dispersion; uniformity uses a fixed regular clock and the stated running bounds.",
+      "test": "check_clock.py / endpoint",
+      "lean": [
+        "isotropic_telescopes",
+        "clock_product_telescope",
+        "physical_clock_composes"
+      ],
+      "observed": "Series through degree two and exact telescoping for 15 paths, including zero steps and perturbed decrements.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Proposition 3.2",
+      "title": "Power-law drift of a linear multiplier",
+      "target": "R.3 / W2a Thm. 4",
+      "status": "FORMAL",
+      "scope": "Exact one-loop sequence with positive denominators and b + κ > 0.",
+      "test": "check_clock.py / drift_product",
+      "lean": [
+        "drift_gamma_identity",
+        "drift_asymptotic",
+        "drift_iff_kappa_ne_zero"
+      ],
+      "observed": "High-precision finite products and normalized large-length limits for negative, zero and positive drift.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Corollary 3.3",
+      "title": "Physical drift coefficient",
+      "target": "R.3",
+      "status": "CONDITIONAL",
+      "scope": "Follows by combining the physical ratio expansion with the drift criterion.",
+      "test": "check_clock.py / no_linear_drift",
+      "lean": [
+        "first_order_compat",
+        "no_regular_clock",
+        "isotropic_telescopes",
+        "drift_iff_kappa_ne_zero"
+      ],
+      "observed": "The physical ratio has zero linear coefficient; the compatibility obstruction at unit slope is exactly κ.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Definition 4.1",
+      "title": "Clock on a centre-neutral excitation branch",
+      "target": "R.4",
+      "status": "DEFINITION",
+      "scope": "Tests the gap expression and model group projectors. Identifying the physical glueball branch requires spectral input.",
+      "test": "check_dispersion.py / box_definition",
+      "lean": [
+        "gap_shift_invariant"
+      ],
+      "observed": "Exact gap-shift identity, cyclic momentum projectors for three sizes and all centre characters for N=2,3.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Lemma 4.2",
+      "title": "Free axial speed and finite-size remainder",
+      "target": "R.5 free branch",
+      "status": "FORMAL",
+      "scope": "Prescribed free dispersion, L ≥ 2 and nonnegative rest mass.",
+      "test": "check_dispersion.py / sinc_bound",
+      "lean": [
+        "free_clock_sinc_bounds"
+      ],
+      "observed": "24 free-branch gap computations at 75 digits, including L=2 and L=100000; checked both signed inequalities.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§4 interacting estimate",
+      "title": "Uniform interacting finite-volume hypothesis",
+      "target": "R.5 interacting branch",
+      "status": "OPEN",
+      "scope": "Constants uniform in both L and g and the interacting branch identification remain open.",
+      "test": "check_dispersion.py / finite_volume_hypothesis",
+      "lean": [],
+      "observed": "The free L²-scaled error stays bounded. A comparison sequence with error 1/L converges while its scaled error diverges. The interacting uniform bound is open.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Proposition 5.1",
+      "title": "Unit speed of the retained free mode",
+      "target": "R.6 / W2b.9",
+      "status": "ANALYTIC",
+      "scope": "Lean checks the alias separation inequality and the all-direction free phase bound. The two-time pole and overlap argument is analytic.",
+      "test": "check_dispersion.py / free_pole",
+      "lean": [
+        "alias_energy_separation",
+        "free_phase_enclosure"
+      ],
+      "observed": "Exact alias identity and all eight aliases in 24 momentum/spacing cases; bounded the phase speed and recovered the late-time pole.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§5 interacting speed",
+      "title": "One-loop dispersion hypothesis",
+      "target": "R.7 / W2d.7",
+      "status": "OPEN",
+      "scope": "Preservation of the selected interacting pole through one loop has no proof in this release.",
+      "test": "check_dispersion.py / dispersion_hypothesis",
+      "lean": [],
+      "observed": "Equal ground-state projectors coexist with different propagation speeds in a calculation with fixed time units. The interacting one-loop law remains open.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§5 W2d.2",
+      "title": "Uniform small-field defect estimate",
+      "target": "R.7 input",
+      "status": "OPEN",
+      "scope": "The model diagnoses the limitation of a one-sided comparison; a uniform gauge-theory estimate remains open.",
+      "test": "check_dispersion.py / defect_lower_bound",
+      "lean": [],
+      "observed": "A positive spectral shift satisfies the one-sided comparison in a model channel. Obtaining the W2d.2 uniform small-field estimate requires interacting input.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§5 W2d.4",
+      "title": "Cancellation of the interacting order-g² loss",
+      "target": "R.7 input",
+      "status": "OPEN",
+      "scope": "The algebraic cancellation assumes the two-mismatch ansatz. Completeness of that ansatz is open.",
+      "test": "check_dispersion.py / loss_cancellation",
+      "lean": [],
+      "observed": "The proposed two-mismatch ansatz cancels its linear term. Its completeness for the interacting W2d.4 defect remains open.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Proposition 6.1",
+      "title": "Group dependence of the Hamiltonian-limit kernel",
+      "target": "R.8",
+      "status": "ANALYTIC",
+      "scope": "Lean checks the group reduction after the moment identities. The input kernel and integral reductions are analytic inputs.",
+      "test": "check_wilson.py / group_dependence",
+      "lean": [
+        "kernel_group_dependence"
+      ],
+      "observed": "Reduced the Wilson kernel for general N; verified the two moment identities against the independent spatial moments at orders 20, 32 and 48.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§6–7 numerical comparison",
+      "title": "Wilson coefficients and printed rounding",
+      "target": "R.8",
+      "status": "DISCREPANCY",
+      "scope": "The two evaluations use the same kernel. The published-pair residuals exceed rounding for SU(2) and SU(3).",
+      "test": "check_wilson.py / coefficients",
+      "lean": [],
+      "observed": "Both quadratures agree within 2×10⁻¹². Absolute printed-pair residuals: SU(2) 5.0148444e-05, SU(3) 6.2367011e-05. Both exceed 10⁻⁵.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Proposition 8.1",
+      "title": "Optional shift from Wilson truncation",
+      "target": "R.9 coefficient identity",
+      "status": "CONDITIONAL",
+      "scope": "Exact differentiation given the coefficient conventions and the assumed expansions.",
+      "test": "check_clock.py / truncation_shift",
+      "lean": [
+        "local_shift_derivative"
+      ],
+      "observed": "Differentiated both definitions at zero; matching their slopes gives (κE−κB)/2 = −Δc_irr.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§8 Wilson shift values",
+      "title": "Group-specific Wilson truncation shifts",
+      "target": "R.9 optional values",
+      "status": "UNEVALUATED",
+      "scope": "The numerical values of Δc_irr for SU(2) and SU(3) are undetermined by the coefficient identity.",
+      "test": "check_wilson.py / local_shift_values",
+      "lean": [],
+      "observed": "Distinct choices satisfy the same identity. The optional group-specific shift is unevaluated in this paper.",
+      "execution": "PASS"
+    },
+    {
+      "label": "Proposition 8.2",
+      "title": "Passage from a direct remainder to its reciprocal",
+      "target": "R.10 implication",
+      "status": "FORMAL",
+      "scope": "The supplement checks the quantified bound for every x in the interval, given the direct remainder and positive floor.",
+      "test": "check_clock.py / reciprocal",
+      "lean": [
+        "reciprocal_remainder"
+      ],
+      "observed": "Exact numerator identity and 117 rational cases including zero, both signs and endpoints.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§8 regularity",
+      "title": "Nonperturbative regularity on the weak interval",
+      "target": "R.10 input",
+      "status": "OPEN",
+      "scope": "Positive C² regularity and a uniform remainder for the interacting clock remain open.",
+      "test": "check_dispersion.py / regularity_hypothesis",
+      "lean": [],
+      "observed": "A normalized comparison clock with x² log(x) has the prescribed slope and an unbounded quadratic remainder. This tests the role of regularity.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§8 strong endpoint",
+      "title": "Control of the strong-coupling endpoint clock",
+      "target": "R.10 endpoint",
+      "status": "ASSUMPTION",
+      "scope": "An independent strong-coupling value is required when the endpoint lies outside the weak interval.",
+      "test": "check_dispersion.py / endpoint_hypothesis",
+      "lean": [],
+      "observed": "Two positive extensions agree on the weak interval and through two derivatives at the cutoff, and yield different endpoint clocks. The strong endpoint needs independent data.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§8 conditional transfer",
+      "title": "Conditional transfer and intermediate step count",
+      "target": "W2a Thm. 12 / Prop. 18",
+      "status": "CONDITIONAL",
+      "scope": "Requires the stated per-step loss, running, propagation and endpoint inequalities.",
+      "test": "check_clock.py / transfer",
+      "lean": [
+        "transfer_bound",
+        "intermediate_step_count"
+      ],
+      "observed": "Five saturated transfer chains and three exact threshold cases, including empty and overshooting segments.",
+      "execution": "PASS"
+    },
+    {
+      "label": "§7 / Appendix A",
+      "title": "Printed coefficient, step, product and free-box tables",
+      "target": "Tables 1, 2, A1, A2",
+      "status": "NUMERICAL",
+      "scope": "The release theorem encloses A. Python validates the other displayed numerical values from newly generated data.",
+      "test": "check_wilson.py / published_tables",
+      "lean": [
+        "A_enclosure"
+      ],
+      "observed": "All 90 printed numeric results in Tables 1, 2, A1 and A2 match their fresh calculations at the displayed precision.",
+      "execution": "PASS"
+    }
+  ],
+  "formal": {
+    "released": {
+      "W2.Common.free_clock_sinc_bounds": {
+        "target": "W2a-R.5, free branch / W2b.10",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.Common.A_enclosure": {
+        "target": "W2a Definition 1 / §8, SU(2) and SU(3)",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.time_unit_scaling": {
+        "target": "W2a Proposition 1",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.kinetic_ratio_clock": {
+        "target": "W2a Corollary 2",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.first_order_compat": {
+        "target": "W2a Lemma 6",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.no_regular_clock": {
+        "target": "W2a Corollary 7",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.step_error_schemeA": {
+        "target": "W2a-R.1(A)",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.step_error_schemeB": {
+        "target": "W2a-R.1(B)",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.drift_gamma_identity": {
+        "target": "W2a Theorem 4, finite product",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.drift_asymptotic": {
+        "target": "W2a Theorem 4, asymptotic (stretch)",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.drift_iff_kappa_ne_zero": {
+        "target": "W2a-R.3, coefficient criterion",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.clock_step_bound": {
+        "target": "W2a Theorem 8",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.clock_product_telescope": {
+        "target": "W2a Corollary 9",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.physical_clock_composes": {
+        "target": "W2a Theorem 15",
+        "level": "L2",
+        "assumptions": "DispersionHyp; ClockRegularityHyp",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.isotropic_telescopes": {
+        "target": "W2a-R.2",
+        "level": "L2",
+        "assumptions": "ClockRegularityHyp (physicalRatio as defined)",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.intermediate_step_count": {
+        "target": "W2a Proposition 18",
+        "level": "L1",
+        "assumptions": "-",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.transfer_bound": {
+        "target": "W2a Theorem 12",
+        "level": "L2",
+        "assumptions": "RunningBoundHyp; explicit per-step/endpoint assumptions",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      }
+    },
+    "supporting": {
+      "W2.Common.cos_le_quartic": {
+        "source": "W2/Common/Trig.lean",
+        "line": 40,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.Common.sin_le_quintic": {
+        "source": "W2/Common/Trig.lean",
+        "line": 56,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.stepBounds": {
+        "source": "W2/W2aR/Estimates.lean",
+        "line": 44,
+        "visibility": "public",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.calibration_floor": {
+        "source": "W2/W2aR/Estimates.lean",
+        "line": 65,
+        "visibility": "public",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.clockEstimate": {
+        "source": "W2/W2aR/Estimates.lean",
+        "line": 74,
+        "visibility": "public",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.eig_scale": {
+        "source": "W2/W2aR/TimeUnit.lean",
+        "line": 74,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.eigval_scale": {
+        "source": "W2/W2aR/TimeUnit.lean",
+        "line": 81,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.combineFactors": {
+        "source": "W2/W2aR/Matching.lean",
+        "line": 98,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.drift_split": {
+        "source": "W2/W2aR/Drift.lean",
+        "line": 67,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.gamma_prod": {
+        "source": "W2/W2aR/Drift.lean",
+        "line": 77,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.product_ratio": {
+        "source": "W2/W2aR/Clock.lean",
+        "line": 97,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.initial_small": {
+        "source": "W2/W2aR/Clock.lean",
+        "line": 105,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.deviation": {
+        "source": "W2/W2aR/Clock.lean",
+        "line": 123,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.physical_product": {
+        "source": "W2/W2aR/Clock.lean",
+        "line": 174,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.derivative_step": {
+        "source": "W2/W2aR/Clock.lean",
+        "line": 190,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.cubic_speed": {
+        "source": "W2/W2aR/Clock.lean",
+        "line": 226,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.sum_squares_running": {
+        "source": "W2/W2aR/Threshold.lean",
+        "line": 92,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.sum_artifacts": {
+        "source": "W2/W2aR/Threshold.lean",
+        "line": 112,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.large_field": {
+        "source": "W2/W2aR/Threshold.lean",
+        "line": 136,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "W2.W2aR.loss_log": {
+        "source": "W2/W2aR/Threshold.lean",
+        "line": 165,
+        "visibility": "private",
+        "axioms": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      }
+    },
+    "supplemental": {
+      "W2.PaperValidation.gap_shift_invariant": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "W2.PaperValidation.alias_energy_separation": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "W2.PaperValidation.free_phase_enclosure": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "W2.PaperValidation.kernel_group_dependence": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "W2.PaperValidation.local_shift_derivative": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "W2.PaperValidation.reciprocal_remainder": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ]
+    },
+    "raw_output_sha256": "e797d27f6ab187e9dcb34c2ef89c9ac73d5f1a1a94604d9a29d1bdcd0b3f806a",
+    "final_packet_sha256": "6d7172e1f5e5e6306a2775339598fccc131ed1d2b75391592d3552929a1d9b95"
+  },
+  "proof_status": "VERIFIED",
+  "successful": true
+}

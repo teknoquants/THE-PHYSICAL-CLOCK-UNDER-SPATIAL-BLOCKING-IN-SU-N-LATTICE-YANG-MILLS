@@ -1,0 +1,223 @@
+-- W2-PACKET {"audit":["W2.Common.free_clock_sinc_bounds"],"editable":["W2.Common.free_clock_sinc_bounds"],"format":2,"mode":"fill","module":"W2/Common/Trig.lean","review":"134a4dabe2cab4082188264678991daa489d80518781b8bd7fa41eeb6afdb84f","unit":"W2aR"}
+/-
+SPDX-License-Identifier: MIT
+MIT License
+
+Copyright (c) 2026 Roger Cooperman; A.E. Petrunina V.V.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-/
+
+module
+
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+public import Mathlib.Analysis.SpecialFunctions.Log.Basic
+public import Mathlib.Analysis.Calculus.ContDiff.Defs
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
+public import Mathlib.Analysis.Calculus.Deriv.MeanValue
+public import Mathlib.Analysis.Calculus.Deriv.Pow
+public import Mathlib.Tactic
+
+@[expose] public section
+
+-- W2 MODULE BEGIN W2/Common/Basic.lean
+/-! Shared W2a-R conventions. Every clock takes the **squared** coupling `x = g²`.
+Index `k` increases from the ultraviolet toward the infrared. -/
+namespace W2.Common
+
+abbrev Clock := ℝ → ℝ
+abbrev Trajectory := ℕ → ℝ
+
+noncomputable def A (N : ℕ) : ℝ := 11 * (N : ℝ) * Real.log 2 / (12 * Real.pi ^ 2)
+
+def weak (xs x : ℝ) : Prop := 0 < x ∧ x ≤ xs
+
+noncomputable def fullClock (c : Clock) (x : ℝ) : ℝ := 1 / c x
+
+def truncClock (c₁ x : ℝ) : ℝ := 1 - c₁ * x
+
+/-- `speed h x z` is the speed measured after blocking with input clock `z`.
+The output time unit is determined by matching to the reference at `y`. -/
+noncomputable def matchedClock {ι : Type*} (c : Clock) (speed : ι → ℝ → ℝ → ℝ)
+    (h : ι) (x y z : ℝ) : ℝ := speed h x z / c y
+
+/-- Physical response once time covariance and exact preservation of speed are imposed. -/
+noncomputable def physicalRatio (c : Clock) (x y z : ℝ) : ℝ := z * c x / c y
+
+noncomputable def oneLoopBack (b a : ℝ) (n : ℕ) : ℝ := 1 / (b + a * n)
+
+/-- Paper's quadratic product includes both endpoints `0` and `K`. -/
+noncomputable def driftProduct (b a κ : ℝ) (K : ℕ) : ℝ :=
+  ∏ n ∈ Finset.range (K + 1), (1 + κ * oneLoopBack b a n)
+
+def aPlus (a B xs : ℝ) : ℝ := a + B * xs
+
+noncomputable def stepQ (a B xs : ℝ) : ℝ := 1 / (1 - aPlus a B xs * xs)
+
+noncomputable def clockFloor (s M xs : ℝ) : ℝ := 1 - |s| * xs - M * xs ^ 2
+
+noncomputable def stepConstant (a B xs s M : ℝ) : ℝ :=
+  (|s| * aPlus a B xs * stepQ a B xs + M * (1 + stepQ a B xs ^ 2)) /
+    clockFloor s M xs
+
+noncomputable def matchConstant (a B xs c₁ Mc : ℝ) : ℝ :=
+  Mc * (1 + stepQ a B xs ^ 2) / clockFloor (-c₁) Mc xs
+
+def blockConstant (C M xs : ℝ) : ℝ := C + M + C * M * xs ^ 2
+
+def stepData (a B xs x y : ℝ) : Prop :=
+  weak xs x ∧ weak xs y ∧ 0 ≤ B ∧ 0 < a - B * xs ∧ aPlus a B xs * xs < 1 ∧
+  |1 / y - 1 / x + a| ≤ B * x
+
+/-- Uniform remainder of a calibrated clock on the weak interval. -/
+def hasRemainder (u : Clock) (xs s M : ℝ) : Prop :=
+  0 ≤ M ∧ ∀ x, weak xs x → |u x - (1 + s * x)| ≤ M * x ^ 2
+
+/-- Axial lattice momentum in units of one fine link. -/
+noncomputable def p₁ (L : ℕ) : ℝ := 2 * Real.pi / L
+
+/-- Quotient of free lattice energy `2 sin(p/2)` by continuum momentum. -/
+noncomputable def freeClock (L : ℕ) : ℝ := 2 * Real.sin (p₁ L / 2) / p₁ L
+
+/-- Squared clock from energy gaps in a fixed momentum and centre-flux sector.
+The zero-momentum excitation is on the same branch as the moving excitation. -/
+noncomputable def boxClockSq (L : ℕ) (E₀ Erest Emoving : ℝ) : ℝ :=
+  ((Emoving - E₀) ^ 2 - (Erest - E₀) ^ 2) / (p₁ L) ^ 2
+
+end W2.Common
+-- W2 MODULE END W2/Common/Basic.lean
+
+-- W2 MODULE BEGIN W2/Common/Hypotheses.lean
+/-! Physical and trajectory inputs used by W2a-R. The structures are predicates on
+specified data. Constructing them for a particular gauge theory is a separate task. -/
+namespace W2.Common
+
+/-- R.10-type regularity on the closed squared-coupling interval, using a normalized
+extension to zero. `M` is uniform in `x`. The direct and inverse remainders differ. -/
+structure ClockRegularityHyp (c : Clock) (xs c₁ : ℝ) : Prop where
+  cutoff_pos : 0 < xs
+  normalized : c 0 = 1
+  positive : ∀ x, weak xs x → 0 < c x
+  smooth : ContDiffOn ℝ 2 c (Set.Icc 0 xs)
+  remainder : ∃ M : ℝ, hasRemainder c xs c₁ M
+
+/-- The extra cubic remainder in the published W2a Theorem 15, with `x = g²`. -/
+def cubicClockExpansion (c : Clock) (xs c₁ : ℝ) : Prop :=
+  ∃ c₂ D : ℝ, 0 ≤ D ∧ ∀ x, weak xs x →
+    |c x - (1 + c₁ * x + c₂ * x ^ 2)| ≤ D * x ^ 3
+
+/-- Hypotheses (i) and (ii) of W2a Theorem 15. `h` ranges over every admitted
+incoming effective datum. `speed` is measured in physical units. -/
+structure DispersionHyp {ι : Type*} (c : Clock) (speed : ι → ℝ → ℝ → ℝ)
+    (xs : ℝ) : Prop where
+  preserves : ∀ h x, weak xs x → speed h x 1 = c x
+  time_covariant : ∀ h x z, weak xs x → 0 < z → speed h x z = z * speed h x 1
+
+/-- Backward inverse-coupling increment, imposed stepwise through a finite weak run.
+No bound on its summed losses is supplied by this structure. -/
+structure RunningBoundHyp (x : Trajectory) (J : ℕ) (xs amin : ℝ) : Prop where
+  amin_pos : 0 < amin
+  cutoff_pos : 0 < xs
+  values : ∀ k ≤ J, weak xs (x k)
+  decrement : ∀ k < J, amin ≤ 1 / x k - 1 / x (k + 1)
+
+/-- The interacting finite-box estimate R.5 as an optional input. Both constants
+are chosen before the box size and the coupling. -/
+def finiteVolumeBound (c : Clock) (cL : ℕ → Clock) (xs : ℝ) : Prop :=
+  ∃ U V : ℝ, 0 ≤ U ∧ 0 ≤ V ∧ ∀ L : ℕ, 2 ≤ L → ∀ x, weak xs x →
+    |cL L x - c x| ≤ (U + V * x ^ 2) / (L : ℝ) ^ 2
+
+end W2.Common
+-- W2 MODULE END W2/Common/Hypotheses.lean
+
+-- W2 MODULE BEGIN W2/Common/Trig.lean
+/-! Free axial lattice clock, shared by W2b.10 and W2a-R.5 at order zero. -/
+namespace W2.Common
+
+/-- The quartic cosine upper polynomial follows by integration from the cubic sine lower bound. -/
+private theorem cos_le_quartic {x : ℝ} (hx : 0 ≤ x) :
+    Real.cos x ≤ 1 - x ^ 2 / 2 + x ^ 4 / 24 := by
+  let f (t : ℝ) := 1 - t ^ 2 / 2 + t ^ 4 / 24 - Real.cos t
+  have hd (t : ℝ) : deriv f t = -t + t ^ 3 / 6 + Real.sin t := by
+    simp (disch := fun_prop) [f]
+    ring
+  have hm : MonotoneOn f (Set.Ici 0) := by
+    apply monotoneOn_of_deriv_nonneg (convex_Ici 0) (by fun_prop)
+    · exact fun _ _ => by dsimp [f]; fun_prop
+    · intro t ht
+      rw [hd]
+      have ht' : 0 ≤ t := interior_subset ht
+      linarith [Real.sin_ge_sub_cube ht']
+  have he := hm (show (0 : ℝ) ∈ Set.Ici 0 by simp) hx hx
+  simpa [f, sub_nonneg] using he
+
+private theorem sin_le_quintic {x : ℝ} (hx : 0 ≤ x) :
+    Real.sin x ≤ x - x ^ 3 / 6 + x ^ 5 / 120 := by
+  let f (t : ℝ) := t - t ^ 3 / 6 + t ^ 5 / 120 - Real.sin t
+  have hd (t : ℝ) : deriv f t = 1 - t ^ 2 / 2 + t ^ 4 / 24 - Real.cos t := by
+    simp (disch := fun_prop) [f]
+    ring
+  have hm : MonotoneOn f (Set.Ici 0) := by
+    apply monotoneOn_of_deriv_nonneg (convex_Ici 0) (by fun_prop)
+    · exact fun _ _ => by dsimp [f]; fun_prop
+    · intro t ht
+      rw [hd]
+      exact sub_nonneg.mpr (cos_le_quartic (interior_subset ht))
+  have he := hm (show (0 : ℝ) ∈ Set.Ici 0 by simp) hx hx
+  simpa [f, sub_nonneg] using he
+
+/-- For every periodic side `L ≥ 2`, the free clock is exactly sinc. Its error after
+subtracting `1 − (π/L)²/6` is between zero and `(π/L)⁴/120`. The last clause
+recovers its square from free dispersion for any energy origin and rest mass. -/
+theorem free_clock_sinc_bounds (L : ℕ) (hL : 2 ≤ L) :
+    let t := Real.pi / (L : ℝ)
+    freeClock L = Real.sin t / t ∧
+      0 ≤ freeClock L - (1 - t ^ 2 / 6) ∧
+      freeClock L - (1 - t ^ 2 / 6) ≤ t ^ 4 / 120 ∧
+      (∀ E₀ m : ℝ, 0 ≤ m → boxClockSq L E₀ (E₀ + m)
+        (E₀ + Real.sqrt (m ^ 2 + (2 * Real.sin (p₁ L / 2)) ^ 2)) = (freeClock L) ^ 2) := by
+-- W2 PROOF BEGIN W2.Common.free_clock_sinc_bounds
+  let t := Real.pi / (L : ℝ)
+  change freeClock L = Real.sin t / t ∧ _
+  have hL' : 0 < (L : ℝ) := by exact_mod_cast (show 0 < L by omega)
+  have ht : 0 < t := div_pos Real.pi_pos hL'
+  have hp : p₁ L = 2 * t := by unfold p₁ t; ring
+  have he : freeClock L = Real.sin t / t := by
+    rw [freeClock, hp, show 2 * t / 2 = t by ring]
+    field_simp
+  rw [he]
+  refine ⟨rfl, ?_, ?_, ?_⟩
+  · apply sub_nonneg.mpr
+    apply (le_div_iff₀ ht).mpr
+    linarith only [Real.sin_ge_sub_cube ht.le, show (1 - t ^ 2 / 6) * t = t - t ^ 3 / 6 by ring]
+  · apply sub_le_iff_le_add.mpr
+    apply (div_le_iff₀ ht).mpr
+    linarith only [sin_le_quintic ht.le,
+      show (t ^ 4 / 120 + (1 - t ^ 2 / 6)) * t = t - t ^ 3 / 6 + t ^ 5 / 120 by ring]
+  · intro E₀ m _
+    rw [← he, boxClockSq, freeClock, add_sub_cancel_left, add_sub_cancel_left,
+      Real.sq_sqrt (by positivity), add_sub_cancel_left, div_pow]
+-- W2 PROOF END W2.Common.free_clock_sinc_bounds
+
+end W2.Common
+-- W2 MODULE END W2/Common/Trig.lean
+
+#check W2.Common.free_clock_sinc_bounds
+#print axioms W2.Common.free_clock_sinc_bounds
+#eval "W2 packet c175533bf47c0ce523111babe904be8bf6f160603883cae970810c8b1b1a7adf"

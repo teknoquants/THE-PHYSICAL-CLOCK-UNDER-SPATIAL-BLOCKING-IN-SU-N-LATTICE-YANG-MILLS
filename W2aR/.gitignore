@@ -1,0 +1,7 @@
+/.lake
+/lean_report.md
+/axiom_audit.log
+scripts/AxiomAudit.lean
+__pycache__/
+*.pyc
+/validation-results/

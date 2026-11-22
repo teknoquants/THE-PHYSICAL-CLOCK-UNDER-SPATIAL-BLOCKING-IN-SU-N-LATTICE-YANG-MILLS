@@ -1,0 +1,539 @@
+Fill only the indented tactic blocks marked for editing. Preserve all frozen text. Use Lean 4.36.0 and Mathlib v4.36.0. Return the complete Lean source and the actual compiler output.
+
+```lean
+-- W2-PACKET {"audit":["W2.Common.free_clock_sinc_bounds","W2.W2aR.clock_step_bound","W2.W2aR.clock_product_telescope","W2.W2aR.physical_clock_composes","W2.W2aR.isotropic_telescopes"],"editable":["W2.W2aR.clock_step_bound","W2.W2aR.clock_product_telescope","W2.W2aR.physical_clock_composes","W2.W2aR.isotropic_telescopes"],"format":2,"mode":"fill","module":"W2/W2aR/Clock.lean","review":"134a4dabe2cab4082188264678991daa489d80518781b8bd7fa41eeb6afdb84f","unit":"W2aR"}
+/-
+SPDX-License-Identifier: MIT
+MIT License
+
+Copyright (c) 2026 Roger Cooperman; A.E. Petrunina V.V.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-/
+
+module
+
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+public import Mathlib.Analysis.SpecialFunctions.Log.Basic
+public import Mathlib.Analysis.Calculus.ContDiff.Defs
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
+public import Mathlib.Analysis.Calculus.Deriv.MeanValue
+public import Mathlib.Analysis.Calculus.Deriv.Pow
+public import Mathlib.Tactic
+public import Mathlib.Analysis.Calculus.ContDiff.RCLike
+public import Mathlib.Analysis.Calculus.ContDiff.Deriv
+
+@[expose] public section
+
+-- W2 MODULE BEGIN W2/Common/Basic.lean
+/-! Shared W2a-R conventions. Every clock takes the **squared** coupling `x = g²`.
+Index `k` increases from the ultraviolet toward the infrared. -/
+namespace W2.Common
+
+abbrev Clock := ℝ → ℝ
+abbrev Trajectory := ℕ → ℝ
+
+noncomputable def A (N : ℕ) : ℝ := 11 * (N : ℝ) * Real.log 2 / (12 * Real.pi ^ 2)
+
+def weak (xs x : ℝ) : Prop := 0 < x ∧ x ≤ xs
+
+noncomputable def fullClock (c : Clock) (x : ℝ) : ℝ := 1 / c x
+
+def truncClock (c₁ x : ℝ) : ℝ := 1 - c₁ * x
+
+/-- `speed h x z` is the speed measured after blocking with input clock `z`.
+The output time unit is determined by matching to the reference at `y`. -/
+noncomputable def matchedClock {ι : Type*} (c : Clock) (speed : ι → ℝ → ℝ → ℝ)
+    (h : ι) (x y z : ℝ) : ℝ := speed h x z / c y
+
+/-- Physical response once time covariance and exact preservation of speed are imposed. -/
+noncomputable def physicalRatio (c : Clock) (x y z : ℝ) : ℝ := z * c x / c y
+
+noncomputable def oneLoopBack (b a : ℝ) (n : ℕ) : ℝ := 1 / (b + a * n)
+
+/-- Paper's quadratic product includes both endpoints `0` and `K`. -/
+noncomputable def driftProduct (b a κ : ℝ) (K : ℕ) : ℝ :=
+  ∏ n ∈ Finset.range (K + 1), (1 + κ * oneLoopBack b a n)
+
+def aPlus (a B xs : ℝ) : ℝ := a + B * xs
+
+noncomputable def stepQ (a B xs : ℝ) : ℝ := 1 / (1 - aPlus a B xs * xs)
+
+noncomputable def clockFloor (s M xs : ℝ) : ℝ := 1 - |s| * xs - M * xs ^ 2
+
+noncomputable def stepConstant (a B xs s M : ℝ) : ℝ :=
+  (|s| * aPlus a B xs * stepQ a B xs + M * (1 + stepQ a B xs ^ 2)) /
+    clockFloor s M xs
+
+noncomputable def matchConstant (a B xs c₁ Mc : ℝ) : ℝ :=
+  Mc * (1 + stepQ a B xs ^ 2) / clockFloor (-c₁) Mc xs
+
+def blockConstant (C M xs : ℝ) : ℝ := C + M + C * M * xs ^ 2
+
+def stepData (a B xs x y : ℝ) : Prop :=
+  weak xs x ∧ weak xs y ∧ 0 ≤ B ∧ 0 < a - B * xs ∧ aPlus a B xs * xs < 1 ∧
+  |1 / y - 1 / x + a| ≤ B * x
+
+/-- Uniform remainder of a calibrated clock on the weak interval. -/
+def hasRemainder (u : Clock) (xs s M : ℝ) : Prop :=
+  0 ≤ M ∧ ∀ x, weak xs x → |u x - (1 + s * x)| ≤ M * x ^ 2
+
+/-- Axial lattice momentum in units of one fine link. -/
+noncomputable def p₁ (L : ℕ) : ℝ := 2 * Real.pi / L
+
+/-- Quotient of free lattice energy `2 sin(p/2)` by continuum momentum. -/
+noncomputable def freeClock (L : ℕ) : ℝ := 2 * Real.sin (p₁ L / 2) / p₁ L
+
+/-- Squared clock from energy gaps in a fixed momentum and centre-flux sector.
+The zero-momentum excitation is on the same branch as the moving excitation. -/
+noncomputable def boxClockSq (L : ℕ) (E₀ Erest Emoving : ℝ) : ℝ :=
+  ((Emoving - E₀) ^ 2 - (Erest - E₀) ^ 2) / (p₁ L) ^ 2
+
+end W2.Common
+-- W2 MODULE END W2/Common/Basic.lean
+
+-- W2 MODULE BEGIN W2/Common/Hypotheses.lean
+/-! Physical and trajectory inputs used by W2a-R. The structures are predicates on
+specified data. Constructing them for a particular gauge theory is a separate task. -/
+namespace W2.Common
+
+/-- R.10-type regularity on the closed squared-coupling interval, using a normalized
+extension to zero. `M` is uniform in `x`. The direct and inverse remainders differ. -/
+structure ClockRegularityHyp (c : Clock) (xs c₁ : ℝ) : Prop where
+  cutoff_pos : 0 < xs
+  normalized : c 0 = 1
+  positive : ∀ x, weak xs x → 0 < c x
+  smooth : ContDiffOn ℝ 2 c (Set.Icc 0 xs)
+  remainder : ∃ M : ℝ, hasRemainder c xs c₁ M
+
+/-- The extra cubic remainder in the published W2a Theorem 15, with `x = g²`. -/
+def cubicClockExpansion (c : Clock) (xs c₁ : ℝ) : Prop :=
+  ∃ c₂ D : ℝ, 0 ≤ D ∧ ∀ x, weak xs x →
+    |c x - (1 + c₁ * x + c₂ * x ^ 2)| ≤ D * x ^ 3
+
+/-- Hypotheses (i) and (ii) of W2a Theorem 15. `h` ranges over every admitted
+incoming effective datum. `speed` is measured in physical units. -/
+structure DispersionHyp {ι : Type*} (c : Clock) (speed : ι → ℝ → ℝ → ℝ)
+    (xs : ℝ) : Prop where
+  preserves : ∀ h x, weak xs x → speed h x 1 = c x
+  time_covariant : ∀ h x z, weak xs x → 0 < z → speed h x z = z * speed h x 1
+
+/-- Backward inverse-coupling increment, imposed stepwise through a finite weak run.
+No bound on its summed losses is supplied by this structure. -/
+structure RunningBoundHyp (x : Trajectory) (J : ℕ) (xs amin : ℝ) : Prop where
+  amin_pos : 0 < amin
+  cutoff_pos : 0 < xs
+  values : ∀ k ≤ J, weak xs (x k)
+  decrement : ∀ k < J, amin ≤ 1 / x k - 1 / x (k + 1)
+
+/-- The interacting finite-box estimate R.5 as an optional input. Both constants
+are chosen before the box size and the coupling. -/
+def finiteVolumeBound (c : Clock) (cL : ℕ → Clock) (xs : ℝ) : Prop :=
+  ∃ U V : ℝ, 0 ≤ U ∧ 0 ≤ V ∧ ∀ L : ℕ, 2 ≤ L → ∀ x, weak xs x →
+    |cL L x - c x| ≤ (U + V * x ^ 2) / (L : ℝ) ^ 2
+
+end W2.Common
+-- W2 MODULE END W2/Common/Hypotheses.lean
+
+-- W2 MODULE BEGIN W2/Common/Trig.lean
+/-! Free axial lattice clock, shared by W2b.10 and W2a-R.5 at order zero. -/
+namespace W2.Common
+
+/-- The quartic cosine upper polynomial follows by integration from the cubic sine lower bound. -/
+private theorem cos_le_quartic {x : ℝ} (hx : 0 ≤ x) :
+    Real.cos x ≤ 1 - x ^ 2 / 2 + x ^ 4 / 24 := by
+  let f (t : ℝ) := 1 - t ^ 2 / 2 + t ^ 4 / 24 - Real.cos t
+  have hd (t : ℝ) : deriv f t = -t + t ^ 3 / 6 + Real.sin t := by
+    simp (disch := fun_prop) [f]
+    ring
+  have hm : MonotoneOn f (Set.Ici 0) := by
+    apply monotoneOn_of_deriv_nonneg (convex_Ici 0) (by fun_prop)
+    · exact fun _ _ => by dsimp [f]; fun_prop
+    · intro t ht
+      rw [hd]
+      have ht' : 0 ≤ t := interior_subset ht
+      linarith [Real.sin_ge_sub_cube ht']
+  have he := hm (show (0 : ℝ) ∈ Set.Ici 0 by simp) hx hx
+  simpa [f, sub_nonneg] using he
+
+private theorem sin_le_quintic {x : ℝ} (hx : 0 ≤ x) :
+    Real.sin x ≤ x - x ^ 3 / 6 + x ^ 5 / 120 := by
+  let f (t : ℝ) := t - t ^ 3 / 6 + t ^ 5 / 120 - Real.sin t
+  have hd (t : ℝ) : deriv f t = 1 - t ^ 2 / 2 + t ^ 4 / 24 - Real.cos t := by
+    simp (disch := fun_prop) [f]
+    ring
+  have hm : MonotoneOn f (Set.Ici 0) := by
+    apply monotoneOn_of_deriv_nonneg (convex_Ici 0) (by fun_prop)
+    · exact fun _ _ => by dsimp [f]; fun_prop
+    · intro t ht
+      rw [hd]
+      exact sub_nonneg.mpr (cos_le_quartic (interior_subset ht))
+  have he := hm (show (0 : ℝ) ∈ Set.Ici 0 by simp) hx hx
+  simpa [f, sub_nonneg] using he
+
+/-- For every periodic side `L ≥ 2`, the free clock is exactly sinc. Its error after
+subtracting `1 − (π/L)²/6` is between zero and `(π/L)⁴/120`. The last clause
+recovers its square from free dispersion for any energy origin and rest mass. -/
+theorem free_clock_sinc_bounds (L : ℕ) (hL : 2 ≤ L) :
+    let t := Real.pi / (L : ℝ)
+    freeClock L = Real.sin t / t ∧
+      0 ≤ freeClock L - (1 - t ^ 2 / 6) ∧
+      freeClock L - (1 - t ^ 2 / 6) ≤ t ^ 4 / 120 ∧
+      (∀ E₀ m : ℝ, 0 ≤ m → boxClockSq L E₀ (E₀ + m)
+        (E₀ + Real.sqrt (m ^ 2 + (2 * Real.sin (p₁ L / 2)) ^ 2)) = (freeClock L) ^ 2) := by
+-- W2 PROOF BEGIN W2.Common.free_clock_sinc_bounds
+  let t := Real.pi / (L : ℝ)
+  change freeClock L = Real.sin t / t ∧ _
+  have hL' : 0 < (L : ℝ) := by exact_mod_cast (show 0 < L by omega)
+  have ht : 0 < t := div_pos Real.pi_pos hL'
+  have hp : p₁ L = 2 * t := by unfold p₁ t; ring
+  have he : freeClock L = Real.sin t / t := by
+    rw [freeClock, hp, show 2 * t / 2 = t by ring]
+    field_simp
+  rw [he]
+  refine ⟨rfl, ?_, ?_, ?_⟩
+  · apply sub_nonneg.mpr
+    apply (le_div_iff₀ ht).mpr
+    linarith only [Real.sin_ge_sub_cube ht.le, show (1 - t ^ 2 / 6) * t = t - t ^ 3 / 6 by ring]
+  · apply sub_le_iff_le_add.mpr
+    apply (div_le_iff₀ ht).mpr
+    linarith only [sin_le_quintic ht.le,
+      show (t ^ 4 / 120 + (1 - t ^ 2 / 6)) * t = t - t ^ 3 / 6 + t ^ 5 / 120 by ring]
+  · intro E₀ m _
+    rw [← he, boxClockSq, freeClock, add_sub_cancel_left, add_sub_cancel_left,
+      Real.sq_sqrt (by positivity), add_sub_cancel_left, div_pow]
+-- W2 PROOF END W2.Common.free_clock_sinc_bounds
+
+end W2.Common
+-- W2 MODULE END W2/Common/Trig.lean
+
+-- W2 MODULE BEGIN W2/W2aR/Estimates.lean
+namespace W2.W2aR
+open W2.Common
+
+structure StepBounds (a B xs x y : ℝ) : Prop where
+  x_pos : 0 < x
+  y_pos : 0 < y
+  xs_pos : 0 < xs
+  ap_pos : 0 < aPlus a B xs
+  q_pos : 0 < stepQ a B xs
+  inc : x ≤ y
+  factor : y ≤ stepQ a B xs * x
+  jump : y - x ≤ aPlus a B xs * stepQ a B xs * x ^ 2
+  lower : a - B * xs ≤ 1 / x - 1 / y
+
+theorem stepBounds {a B xs x y : ℝ} (h : stepData a B xs x y) : StepBounds a B xs x y := by
+  obtain ⟨⟨hx,hxs⟩,⟨hy,hys⟩,hB,hm,hmax,hd⟩ := h
+  let d := 1 / x - 1 / y
+  have d0 : 0 < xs := hx.trans_le hxs
+  have dmin : a - B*xs ≤ d := by dsimp [d]; linarith [(abs_le.mp hd).2, mul_le_mul_of_nonneg_left hxs hB]
+  have dmax : d ≤ aPlus a B xs := by dsimp [d,aPlus]; linarith [(abs_le.mp hd).1, mul_le_mul_of_nonneg_left hxs hB]
+  have hdpos := hm.trans_le dmin
+  have hap := hdpos.trans_le dmax
+  have hid : d * x * y = y - x := by dsimp [d]; field_simp
+  have hinc : x ≤ y := by nlinarith [mul_nonneg (mul_nonneg hdpos.le hx.le) hy.le]
+  have he : 0 < 1-aPlus a B xs * xs := by linarith
+  have hq : 0 < stepQ a B xs := one_div_pos.mpr he
+  have hxf : y ≤ stepQ a B xs * x := by
+    rw [stepQ, one_div_mul_eq_div, le_div_iff₀ he]
+    have hp : d*x ≤ aPlus a B xs * xs := mul_le_mul dmax hxs hx.le hap.le
+    nlinarith [mul_le_mul_of_nonneg_right hp hy.le]
+  refine ⟨hx,hy,d0,hap,hq,hinc,hxf,?_,dmin⟩
+  calc y-x = d*x*y := hid.symm
+       _ ≤ aPlus a B xs * x * (stepQ a B xs * x) := by gcongr
+       _ = _ := by ring
+
+theorem calibration_floor {u : Clock} {s M xs x : ℝ} (h : hasRemainder u xs s M)
+    (hx : weak xs x) : clockFloor s M xs ≤ u x := by
+  obtain ⟨hM,hr⟩ := h
+  have e := (abs_le.mp (hr x hx)).1
+  have a : |s*x| ≤ |s| * xs := by rw [abs_mul,abs_of_pos hx.1]; gcongr; exact hx.2
+  have b : M*x^2 ≤ M*xs^2 := by gcongr; exact hx.1.le; exact hx.2
+  unfold clockFloor
+  linarith [neg_abs_le (s*x)]
+
+theorem clockEstimate {u : Clock} {a B xs x y s M : ℝ} (step : stepData a B xs x y)
+    (rest : hasRemainder u xs s M) (floorpos : 0 < clockFloor s M xs) :
+    |u y / u x - 1| ≤ stepConstant a B xs s M * x^2 := by
+  have b := stepBounds step
+  have lower := calibration_floor rest step.1
+  have hp := floorpos.trans_le lower
+  let Q := stepQ a B xs
+  let C := |s| * aPlus a B xs * Q + M * (1 + Q^2)
+  have hc : 0 ≤ C := by dsimp [C]; have := b.ap_pos; have : 0 < Q := b.q_pos; have := rest.1; positivity
+  have d : |u y-u x| ≤ C*x^2 := by
+    calc |u y-u x| = |(u y-(1+s*y)) + s*(y-x) - (u x-(1+s*x))| := by ring_nf
+         _ ≤ |u y-(1+s*y)| + |s*(y-x)| + |u x-(1+s*x)| :=
+           by
+           rw [sub_eq_add_neg (_ + _)]
+           exact (abs_add_le ..).trans (by rw [abs_neg]; gcongr; exact abs_add_le ..)
+         _ ≤ M*(Q*x)^2 + |s| * (aPlus a B xs*Q*x^2) + M*x^2 := by
+           rw [abs_mul,abs_of_nonneg (sub_nonneg.mpr b.inc)]
+           have hy2 : y^2 ≤ (Q*x)^2 := by gcongr; exact b.y_pos.le; exact b.factor
+           exact add_le_add (add_le_add ((rest.2 y step.2.1).trans (mul_le_mul_of_nonneg_left hy2 rest.1)) (mul_le_mul_of_nonneg_left b.jump (abs_nonneg s))) (rest.2 x step.1)
+         _ = _ := by dsimp [C]; ring
+  rw [show u y / u x - 1 = (u y-u x) / u x by field_simp, abs_div, abs_of_pos hp]
+  change |u y-u x| / u x ≤ C / clockFloor s M xs * x^2
+  rw [div_mul_eq_mul_div]
+  exact div_le_div₀ (mul_nonneg hc (sq_nonneg _)) d floorpos lower
+
+end W2.W2aR
+-- W2 MODULE END W2/W2aR/Estimates.lean
+
+-- W2 MODULE BEGIN W2/W2aR/Clock.lean
+namespace W2.W2aR
+open W2.Common
+
+noncomputable def ratioProduct (u : Clock) (x : Trajectory) (J : ℕ) : ℝ :=
+  ∏ k ∈ Finset.range J, u (x (k + 1)) / u (x k)
+
+/-- W2a Theorem 8, including its explicit denominator and uniform remainder. -/
+def clock_step_bound.statement : Prop :=
+  ∀ (u : Clock) (a B xs x y s M : ℝ), stepData a B xs x y →
+    hasRemainder u xs s M → 0 < clockFloor s M xs →
+    |u y / u x - 1| ≤ stepConstant a B xs s M * x ^ 2
+
+/-- W2a Cor. 9. The first clause is exact, including the empty product. The second
+chooses a single cutoff before all admitted trajectories and calibrations sharing
+the given constants, at a fixed terminal squared coupling `xt`. -/
+def clock_product_telescope.statement : Prop :=
+  (∀ (u : Clock) (x : Trajectory) (J : ℕ), (∀ k ≤ J, u (x k) ≠ 0) →
+    ratioProduct u x J = u (x J) / u (x 0)) ∧
+  ∀ a B xs s M xt : ℝ, weak xs xt → 0 ≤ B → 0 < a - B * xs →
+    0 ≤ M → 0 < clockFloor s M xs → ∀ ε : ℝ, 0 < ε → ∃ J₀ : ℕ,
+    ∀ J ≥ J₀, ∀ (u : Clock) (x : Trajectory), hasRemainder u xs s M →
+    x J = xt → (∀ k ≤ J, weak xs (x k)) →
+    (∀ k < J, stepData a B xs (x k) (x (k + 1))) → |ratioProduct u x J - u xt| < ε
+
+/-- W2a Theorem 15. Speed covariance and preservation are separately quantified
+physical inputs. Matching speeds at two successive squared couplings composes. -/
+def physical_clock_composes.statement : Prop :=
+  ∀ (ι : Type) (c : Clock) (speed : ι → ℝ → ℝ → ℝ) (xs c₁ : ℝ),
+    DispersionHyp c speed xs → ClockRegularityHyp c xs c₁ →
+    ∀ (h : ι) (x y : ℝ), weak xs x → weak xs y →
+    (∀ z : ℝ, 0 < z → matchedClock c speed h x y z = physicalRatio c x y z) ∧
+    matchedClock c speed h x y (fullClock c x) = fullClock c y
+
+/-- W2a-R.2. The physical response is already expressed in reference-speed units.
+The same cubic-error constant works for every admitted step. The same cutoff
+works for every trajectory of length `J` with the stated endpoint. -/
+def isotropic_telescopes.statement : Prop :=
+  ∀ (c : Clock) (a B xs c₁ : ℝ), ClockRegularityHyp c xs c₁ →
+    0 ≤ B → 0 < a - B * xs → aPlus a B xs * xs < 1 →
+    (∃ D : ℝ, 0 ≤ D ∧ ∀ x y, stepData a B xs x y →
+      |physicalRatio c x y 1 - (1 - c₁ * a * x ^ 2)| ≤ D * x ^ 3) ∧
+    (∀ (x : Trajectory) (J : ℕ), (∀ k ≤ J, weak xs (x k)) →
+      (∏ k ∈ Finset.range J, physicalRatio c (x k) (x (k + 1)) 1) = c (x 0) / c (x J)) ∧
+    (∀ xt : ℝ, weak xs xt → ∀ ε : ℝ, 0 < ε → ∃ J₀ : ℕ, ∀ J ≥ J₀,
+      ∀ x : Trajectory, x J = xt → (∀ k ≤ J, weak xs (x k)) →
+      (∀ k < J, stepData a B xs (x k) (x (k + 1))) →
+      |(∏ k ∈ Finset.range J, physicalRatio c (x k) (x (k + 1)) 1) - 1 / c xt| < ε)
+
+end W2.W2aR
+
+-- W2 IMPLEMENTATION
+namespace W2.W2aR
+open W2.Common Set
+
+theorem clock_step_bound : clock_step_bound.statement := by
+-- W2 PROOF BEGIN W2.W2aR.clock_step_bound
+  sorry
+-- W2 PROOF END W2.W2aR.clock_step_bound
+
+private theorem product_ratio (z : ℕ → ℝ) (J : ℕ) (nz : ∀ k ≤ J, z k ≠ 0) :
+    (∏ k ∈ Finset.range J, z (k+1)/z k) = z J/z 0 := by
+  induction J with
+  | zero => simp [nz 0 le_rfl]
+  | succ J ih =>
+    rw [Finset.prod_range_succ, ih (fun k hk => nz k (hk.trans (Nat.le_succ J)))]
+    field_simp [nz J (Nat.le_succ J),nz 0 (Nat.zero_le _)]
+
+private theorem initial_small (a B xs δ : ℝ) (ha : 0 < a-B*xs) (hδ : 0 < δ) :
+    ∃ n : ℕ, ∀ J ≥ n, ∀ x : Trajectory, (∀ k ≤ J, weak xs (x k)) →
+      (∀ k < J, stepData a B xs (x k) (x (k+1))) → x 0 < δ := by
+  obtain ⟨n,hn⟩ := exists_nat_gt (1/δ/(a-B*xs))
+  refine ⟨n,?_⟩
+  intro J hJ x values steps
+  have pref (k : ℕ) (hk : k ≤ J) : (k:ℝ)*(a-B*xs) ≤ 1/x 0-1/x k := by
+    induction k with
+    | zero => simp
+    | succ k ih =>
+      have prev := ih (by omega)
+      have incr := (stepBounds (steps k (by omega))).lower
+      push_cast; linarith
+  have nJ : (n:ℝ) ≤ J := by exact_mod_cast hJ
+  have low := (div_lt_iff₀ ha).mp (hn.trans_le nJ)
+  have he : 1/δ < 1/x 0 := by linarith [pref J le_rfl,one_div_pos.mpr (values J le_rfl).1]
+  exact (one_div_lt_one_div hδ (values 0 (Nat.zero_le _)).1).mp he
+
+private theorem deviation {u : Clock} {s M xs t : ℝ} (rem : hasRemainder u xs s M)
+    (ht : weak xs t) : |u t-1| ≤ (|s|+M*xs)*t := by
+  have hid : u t-1 = (u t-(1+s*t))+s*t := by ring
+  rw [hid]
+  calc _ ≤ |u t-(1+s*t)|+|s*t| := abs_add_le .. 
+       _ ≤ M*t^2+|s| * t := by rw [abs_mul,abs_of_pos ht.1]; gcongr; exact rem.2 t ht
+       _ ≤ _ := by nlinarith only [mul_le_mul_of_nonneg_right ht.2 (mul_nonneg rem.1 ht.1.le)]
+
+theorem clock_product_telescope : clock_product_telescope.statement := by
+-- W2 PROOF BEGIN W2.W2aR.clock_product_telescope
+  sorry
+-- W2 PROOF END W2.W2aR.clock_product_telescope
+
+theorem physical_clock_composes : physical_clock_composes.statement := by
+-- W2 PROOF BEGIN W2.W2aR.physical_clock_composes
+  sorry
+-- W2 PROOF END W2.W2aR.physical_clock_composes
+
+private theorem physical_product {c : Clock} {xs c₁ : ℝ} (reg : ClockRegularityHyp c xs c₁)
+    (x : Trajectory) (J : ℕ) (values : ∀ k ≤ J, weak xs (x k)) :
+    (∏ k ∈ Finset.range J, physicalRatio c (x k) (x (k+1)) 1) = c (x 0)/c (x J) := by
+  induction J with
+  | zero => simp [(reg.positive _ (values 0 le_rfl)).ne']
+  | succ J ih =>
+    rw [Finset.prod_range_succ, ih (fun k hk => values k (hk.trans (Nat.le_succ J)))]
+    simp only [physicalRatio,one_mul]
+    field_simp [(reg.positive _ (values J (Nat.le_succ J))).ne']
+
+end W2.W2aR
+
+namespace W2.W2aR
+open W2.Common Set
+
+/-- Two secants share a Lipschitz bound for the derivative on the closed interval. -/
+private theorem derivative_step {c : Clock} {xs s M : ℝ} (reg : ClockRegularityHyp c xs s)
+    (rem : hasRemainder c xs s M) :
+    ∃ L : ℝ, 0 ≤ L ∧ ∀ x y, weak xs x → weak xs y → x < y →
+      |c y-c x-s*(y-x)| ≤ (M*x+L*y)*(y-x) := by
+  let S := Icc 0 xs
+  have smooth : ContDiffOn ℝ 1 (derivWithin c S) S :=
+    reg.smooth.derivWithin (uniqueDiffOn_Icc reg.cutoff_pos) (by norm_num)
+  obtain ⟨L,lip⟩ := smooth.exists_lipschitzOnWith (by norm_num) (convex_Icc 0 xs) isCompact_Icc
+  refine ⟨L,L.coe_nonneg,?_⟩
+  intro x y hx hy hxy
+  have sec (a b : ℝ) (ha : 0 ≤ a) (hb : b ≤ xs) (hab : a < b) :
+      ∃ t ∈ Ioo a b, derivWithin c S t = (c b-c a)/(b-a) := by
+    have sub : Icc a b ⊆ S := fun _ h => ⟨ha.trans h.1,h.2.trans hb⟩
+    obtain ⟨t,ht,eq⟩ := exists_deriv_eq_slope c hab (reg.smooth.continuousOn.mono sub)
+      ((reg.smooth.differentiableOn (by norm_num)).mono (Ioo_subset_Icc_self.trans sub))
+    exact ⟨t,ht,(derivWithin_of_mem_nhds (Icc_mem_nhds (ha.trans_lt ht.1) (ht.2.trans_le hb))).trans eq⟩
+  obtain ⟨v,hv,sv⟩ := sec 0 x le_rfl hx.2 hx.1
+  obtain ⟨w,hw,sw⟩ := sec x y hx.1.le hy.2 hxy
+  rw [reg.normalized,sub_zero] at sv
+  have vS : v ∈ S := ⟨hv.1.le,hv.2.le.trans hx.2⟩
+  have wS : w ∈ S := ⟨hx.1.le.trans hw.1.le,hw.2.le.trans hy.2⟩
+  have lipbound := lip.dist_le_mul w wS v vS
+  rw [Real.dist_eq,Real.dist_eq,abs_of_nonneg (by linarith [hv.2,hw.1] : 0 ≤ w-v)] at lipbound
+  have dv : |derivWithin c S v-s| ≤ M*x := by
+    rw [sv,show (c x-1)/x-s = (c x-(1+s*x))/x by field_simp [hx.1.ne']; ring,abs_div,abs_of_pos hx.1,div_le_iff₀ hx.1]
+    nlinarith only [rem.2 x hx]
+  have dw : |derivWithin c S w-s| ≤ M*x+L*y := by
+    calc _ ≤ |derivWithin c S w-derivWithin c S v|+|derivWithin c S v-s| := abs_sub_le .. 
+         _ ≤ (L:ℝ)*(w-v)+M*x := add_le_add lipbound dv
+         _ ≤ _ := by linarith [mul_le_mul_of_nonneg_left (show w-v ≤ y by linarith [hw.2,hv.1]) L.coe_nonneg]
+  have dpos : 0 < y-x := sub_pos.mpr hxy
+  have e := (eq_div_iff dpos.ne').mp sw
+  rw [show c y-c x-s*(y-x) = (derivWithin c S w-s)*(y-x) by linarith only [e],
+    abs_mul,abs_of_pos dpos]
+  exact mul_le_mul_of_nonneg_right dw dpos.le
+
+private theorem cubic_speed {c : Clock} {a B xs s : ℝ} (reg : ClockRegularityHyp c xs s)
+    (hB : 0 ≤ B) :
+    ∃ D : ℝ, 0 ≤ D ∧ ∀ x y, stepData a B xs x y →
+      |physicalRatio c x y 1 - (1-s*a*x^2)| ≤ D*x^3 := by
+  obtain ⟨M,rem⟩ := reg.remainder
+  obtain ⟨L,hL,dsec⟩ := derivative_step reg rem
+  obtain ⟨m,hm,hmin⟩ := isCompact_Icc.exists_isMinOn (nonempty_Icc.mpr reg.cutoff_pos.le) reg.smooth.continuousOn
+  have hp : 0 < c m := by
+    rcases eq_or_lt_of_le hm.1 with h|h
+    · rw [← h,reg.normalized]; norm_num
+    · exact reg.positive _ ⟨h,hm.2⟩
+  let Q := stepQ a B xs
+  let H := aPlus a B xs * Q
+  let K := |s| + M*xs
+  let C := (M+L*Q)*H + |s| * (B*Q+|a| * H) + |s*a| * K*Q
+  refine ⟨|C|/c m,by positivity,?_⟩
+  intro x y step
+  have b := stepBounds step
+  have hx := b.x_pos
+  have hy := b.y_pos
+  have hQ : 0 < Q := b.q_pos
+  have hH : 0 ≤ H := mul_nonneg b.ap_pos.le hQ.le
+  have hK : 0 ≤ K := add_nonneg (abs_nonneg _) (mul_nonneg rem.1 reg.cutoff_pos.le)
+  have hc := reg.positive _ step.2.1
+  have hclow : c m ≤ c y := hmin ⟨hy.le,step.2.1.2⟩
+  have hxy : x < y := by
+    apply lt_of_le_of_ne b.inc
+    rintro rfl
+    have := b.lower; linarith [step.2.2.2.1]
+  have jump : y-x ≤ H*x^2 := b.jump
+  have fact : y ≤ Q*x := b.factor
+  have s₁ : |c y-c x-s*(y-x)| ≤ ((M+L*Q)*H)*x^3 := by
+    apply (dsec x y step.1 step.2.1 hxy).trans
+    calc _ ≤ (M*x+L*(Q*x))*(H*x^2) := mul_le_mul (by gcongr) jump (sub_nonneg.mpr b.inc)
+             (add_nonneg (mul_nonneg rem.1 hx.le) (mul_nonneg hL (mul_nonneg hQ.le hx.le)))
+         _ = _ := by ring
+  let d := 1/x-1/y
+  have id : d*x*y = y-x := by dsimp [d]; field_simp
+  have dd : |d-a| ≤ B*x := by
+    rw [← abs_neg,show -(d-a) = 1/y-1/x+a by dsimp [d]; ring]; exact step.2.2.2.2.2
+  have s₂ : |(y-x)-a*x^2| ≤ (B*Q+|a| * H)*x^3 := by
+    have e : y-x-a*x^2 = (d-a)*x*y+a*x*(y-x) := by linarith only [id]
+    rw [e]
+    calc _ ≤ |(d-a)*x*y|+|a*x*(y-x)| := abs_add_le ..
+         _ ≤ (B*x)*x*(Q*x)+|a| * x*(H*x^2) := by
+           simp only [abs_mul,abs_of_pos hx,abs_of_pos hy,abs_of_nonneg (sub_nonneg.mpr b.inc)]
+           gcongr
+         _ = _ := by ring
+  have s₃ : |c y-1| ≤ K*(Q*x) := (deviation rem step.2.1).trans (mul_le_mul_of_nonneg_left fact hK)
+  let e := c y-c x-s*(y-x)
+  let f := y-x-a*x^2
+  have eq : physicalRatio c x y 1-(1-s*a*x^2) = (-e-s*f+s*a*x^2*(c y-1))/c y := by
+    dsimp [physicalRatio,e,f]; field_simp; ring
+  rw [eq,abs_div,abs_of_pos hc,div_mul_eq_mul_div]
+  apply div_le_div₀ (mul_nonneg (abs_nonneg _) (by positivity)) _ hp hclow
+  calc _ ≤ |e|+|s| * |f|+|s*a| * x^2*|c y-1| := by
+         apply (abs_add_le ..).trans
+         simp only [abs_mul,abs_pow,abs_of_pos hx]
+         gcongr
+         simpa [sub_eq_add_neg,abs_mul] using abs_add_le (-e) (-(s*f))
+       _ ≤ ((M+L*Q)*H)*x^3 + |s| * ((B*Q+|a| * H)*x^3) + |s*a| * x^2*(K*(Q*x)) :=
+         add_le_add (add_le_add s₁ (mul_le_mul_of_nonneg_left s₂ (abs_nonneg _)))
+           (mul_le_mul_of_nonneg_left s₃ (by positivity))
+       _ = C*x^3 := by dsimp [C]; ring
+       _ ≤ _ := mul_le_mul_of_nonneg_right (le_abs_self _) (by positivity)
+
+theorem isotropic_telescopes : isotropic_telescopes.statement := by
+-- W2 PROOF BEGIN W2.W2aR.isotropic_telescopes
+  sorry
+-- W2 PROOF END W2.W2aR.isotropic_telescopes
+
+end W2.W2aR
+-- W2 MODULE END W2/W2aR/Clock.lean
+
+example : W2.W2aR.clock_step_bound.statement := W2.W2aR.clock_step_bound
+example : W2.W2aR.clock_product_telescope.statement := W2.W2aR.clock_product_telescope
+example : W2.W2aR.physical_clock_composes.statement := W2.W2aR.physical_clock_composes
+example : W2.W2aR.isotropic_telescopes.statement := W2.W2aR.isotropic_telescopes
+#print axioms W2.Common.free_clock_sinc_bounds
+#print axioms W2.W2aR.clock_step_bound
+#print axioms W2.W2aR.clock_product_telescope
+#print axioms W2.W2aR.physical_clock_composes
+#print axioms W2.W2aR.isotropic_telescopes
+#eval "W2 packet 01515fd2c3f7400ab96bf1d025f260516d5a66206a174e338b2d366b45467df4"
+```

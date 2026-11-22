@@ -1,0 +1,8 @@
+✔ [6639/6837] Built W2.Common.Constants (1.9s)
+✔ [6641/6837] Built W2.W2aR.TimeUnit (1.0s)
+✔ [7307/7327] Built W2.W2aR.Estimates (2.3s)
+✔ [7320/7327] Built W2.W2aR.Drift (1.6s)
+✔ [7322/7327] Built W2.W2aR.Threshold (1.7s)
+✔ [7324/7327] Built W2.W2aR.Clock (1.9s)
+✔ [7326/7327] Built W2.W2aR.Matching (2.3s)
+Build completed successfully (7327 jobs).

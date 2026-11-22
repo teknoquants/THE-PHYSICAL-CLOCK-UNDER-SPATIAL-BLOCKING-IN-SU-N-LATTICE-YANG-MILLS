@@ -1,0 +1,304 @@
+% SPDX-License-Identifier: MIT
+% MIT License
+% 
+% Copyright (c) 2026 Roger Cooperman; A.E. Petrunina V.V.
+% 
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+% 
+% The above copyright notice and this permission notice shall be included in all
+% copies or substantial portions of the Software.
+% 
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+% SOFTWARE.
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=20mm,top=21mm,bottom=20mm,headheight=14pt]{geometry}
+\usepackage{amsmath,amssymb,booktabs,tabularx,array,xcolor,fancyhdr,fontspec,hyperref}
+\setmainfont{Liberation Serif}
+\setsansfont{Open Sans}
+\setmonofont[Scale=0.86]{DejaVu Sans Mono}
+\definecolor{ink}{HTML}{183549}
+\definecolor{teal}{HTML}{006D69}
+\definecolor{muted}{HTML}{526470}
+\hypersetup{colorlinks=true,urlcolor=teal,linkcolor=teal,pdftitle={W2a-R: The physical clock under spatial blocking},pdfauthor={Roger Cooperman and A.E. Petrunina V.V.}}
+\linespread{1.04}\pagestyle{fancy}\fancyhf{}
+\lhead{\sffamily\footnotesize\color{muted}W2a-R \quad / \quad The physical clock}
+\rhead{\sffamily\footnotesize\color{muted}Technical supplement}
+\lfoot{\sffamily\footnotesize\color{muted}Lean 4.36.0 \quad $\cdot$ \quad \texttt{w2ar-v1}}
+\rfoot{\sffamily\footnotesize\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0.3pt}\renewcommand{\footrulewidth}{0pt}
+\setlength{\parindent}{0pt}\setlength{\parskip}{4.5pt plus .6pt minus .5pt}
+\setlength{\tabcolsep}{6pt}\renewcommand{\arraystretch}{1.17}
+\newcommand{\Title}[1]{\par{\raggedright\sffamily\bfseries\color{ink}\fontsize{22}{26}\selectfont #1\par}\vspace{3pt}}
+\newcommand{\Section}[1]{\par\addvspace{6pt}{\sffamily\bfseries\color{teal}\large #1\par}\nobreak\vspace{1pt}}
+\newcommand{\lab}[1]{{\sffamily\bfseries\color{teal}#1}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\cR}{c_{\mathrm{ref}}}
+\newcommand{\UV}{\mathrm{UV}}
+\newcommand{\IR}{\mathrm{IR}}
+\newcommand{\match}{\mathrm{match}}
+\newcommand{\sg}{\sigma}\newcommand{\ta}{\tau}
+\newcommand{\ds}{\displaystyle}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\input{products-table.tex}
+\input{free-table.tex}
+\begin{document}\raggedright
+{\sffamily\small\bfseries\color{teal}XISOSIS \quad MATHEMATICAL SUPPLEMENT \quad W2a-R}\par
+\vspace{4pt}
+{\sffamily\bfseries\color{ink}\fontsize{30}{34}\selectfont The physical clock under\\spatial blocking\par}
+{\sffamily\color{muted}\large Coefficients, finite volume and the dispersion hypothesis}\par
+\vspace{3pt}
+\textbf{The time unit for W2f is $\xi_A(g)=1/\cR(g)$.} When spatial blocking preserves the measured speed and respects time rescaling, this calibration matches at each step exactly. Its product contributes a single endpoint factor. Its per-step variation still depends on the uniform remainder of $1/\cR$.
+
+\begin{tabularx}{\linewidth}{@{}p{.17\linewidth}YY@{}}
+\toprule
+\lab{Result} & \lab{Established here} & \lab{Physical input or limitation}\\\midrule
+R.1--R.3 & Separate constants for the full and truncated clocks. Uniform telescoping and the drift criterion. & Application to the interacting block uses its physical dispersion and clock regularity.\\
+R.4--R.5 & Centre-neutral momentum-sector definition and an explicit free sinc bound. & Uniform interacting finite-volume convergence and identification of the physical branch require spectral information.\\
+R.6--R.7 & The free two-link block retains the low-energy pole in physical time. & Interacting one-loop preservation for the W2 effective dynamics remains open.\\
+R.8 & Two quadratures give $c_1(2)=-0.16750985$ and $c_1(3)=-0.33416763$ for the Wilson Hamiltonian kernel. & Karsch's printed Hamiltonian-limit differences agree to three significant figures. Page 6 quantifies the discrepancy.\\
+R.9--R.10 & The unused Wilson-local shift is isolated. The regularity assumptions and endpoint clock are stated. & A uniform interacting remainder constant and a strong-coupling clock remain inputs to W2f.\\
+Part 8 & The six module returns and the final check-only packet pass in Lean 4.36.0. & 14 L1 and 3 L2 declarations, including the shared free-clock theorem and the gamma-asymptotic stretch result.\\
+\bottomrule
+\end{tabularx}
+
+\Section{Conventions}
+The periodic spatial lattice has fine spacing $a_k$ and continuous time. Each step doubles the spatial spacing. Set $x=g_k^2$, $y=g_{k+1}^2$, $x_*=g_*^2$ and $c(x)=\cR(\sqrt{x})$. The index increases toward the infrared. In convention B2, $g_s^2=2g^2$, $A=11N\log 2/(12\pi^2)$ and the classical axial speed is one. The numerical example uses $x_*=1/6$.
+
+The companion project contains the proof-bearing Lean modules, the original statement checkpoint, the six fill packets and returns, the final compiler output, the Python validations and all numerical tables.
+
+\clearpage
+\Title{Clock matching and the ultraviolet limit}
+The inverse-coupling step satisfies $|1/y-1/x+A|\le Bx$ for $0<x,y\le x_*$. Put $A_\pm=A\pm Bx_*$, assume $A_->0$, $A_+x_*<1$, and write $Q=(1-A_+x_*)^{-1}$. Then $d=1/x-1/y\in[A_-,A_+]$, $y\le Qx$, and $0<y-x=dxy\le A_+Qx^2$. The full inverse clock $u=1/c$ obeys $|u(t)-(1-c_1t)|\le M_ct^2$ and $d_0=1-|c_1|x_*-M_cx_*^2>0$.
+
+\Section{Two bounds for two calibrations}
+For $F(x,z)=zc(x)/c(y)$, $F(x,u(x))=u(y)$. The triangle inequality on $u(y)-u(x)$ and the lower bound $u(x)\ge d_0$ give
+\[
+ M_{\match}^A=0,\qquad C_\xi^A=\frac{|c_1|A_+Q+M_c(1+Q^2)}{d_0}.
+\]
+For $v(t)=1-c_1t$, the calibration remainder is zero. If $Bx_*\le A/2$, $A_+x_*\le 1/2$ and $|c_1|x_*\le 1/2$, then $A_+\le 3A/2$, $Q\le2$, $v(x)\ge1/2$. Consequently
+\[
+ C_\xi^B=6A|c_1|,\qquad M_{\match}^B\ \le\ \frac{M_c(1+Q^2)}{d_0}.
+\]
+To bound the residual, let $\ell=1-|c_1|x_*$ and $p=u/v$. Then $|p(t)-1|\le M_ct^2/\ell$, $p(x)\ge d_0/\ell$ and $F(x,v(x))/v(y)=p(y)/p(x)$. This residual can be nonzero. Multiplying the two factors, each within $Cx^2$ or $M_{\match}x^2$ of one, bounds the actual block error by
+\[
+  (C+M_{\match}+CM_{\match}x_*^2)x^2 .
+\]
+These formulas correct W2a Corollary 16. In W2f, exact matching in Scheme A removes the clock residual from the loss sum.
+
+\Section{Uniformity and drift}
+Time covariance and preservation give $F(x,1)=c(x)/c(y)$. Since $d=A+O(x)$, $y-x=Ax^2+O(x^3)$. On the closed weak interval $c$ is positive, normalized at zero and $C^2$ in $x$. Its derivative is Lipschitz there. Apply the mean value theorem to both $[0,x]$ and $[x,y]$, using $c(x)=1+c_1x+O(x^2)$ on the first interval. The second secant has slope $c_1+O(x)$. The positive minimum of $c$ gives the uniform expansion $F(x,1)=1-c_1Ax^2+O(x^3)$.
+\[
+ \prod_{k=0}^{J-1}F(x_k,1)=\frac{c(x_0)}{c(x_J)}
+ \longrightarrow \frac{1}{c(x_t)},\qquad
+ x_0\le (1/x_t+JA_-)^{-1},\quad x_J=x_t .
+\]
+Thus a single length cutoff works for every trajectory with that endpoint and common running constants. A uniform quadratic-remainder bound on a family of normalized clocks gives the analogous uniform calibration-product limit, with a common positive floor. The physical response has a quartic tail in $g$. W2a's $P_4$ has the same convergence class.
+
+A reading with a linear term $\kappa x$ has exponent $\kappa/A$ on $x_n=(b+An)^{-1}$. The finite product over $0\le n\le K$ is $\Gamma(K+1+q+s)\Gamma(q)/[\Gamma(K+1+q)\Gamma(q+s)]$, where $q=b/A$, $s=\kappa/A$ and $b+\kappa>0$. Its ratio to $K^s$ tends to $\Gamma(q)/\Gamma(q+s)$. The physical reading has $\kappa=0$. W2a Proposition 17 identifies $\kappa_{\rm local}=-\Delta c_{\rm irr}$ when the blocked operator is truncated to Wilson form.
+
+\clearpage
+\Title{Finite boxes and blocked dispersion}
+\Section{The centre-neutral excitation branch}
+On the periodic $L^3$ lattice take the Gauss-law invariant subspace of the link Hilbert space. For each of the three fundamental dual cuts, multiplication of links crossing the cut by a centre element (using inverse powers for opposite orientation) commutes with the pure-gauge Hamiltonian. Cuts displaced by a lattice translation differ by gauge transformations on physical states. Choose the simultaneous trivial character of $Z_N^3$, or zero winding electric flux. Winding Polyakov loops carry nontrivial centre charge. Contractible glueball operators preserve this sector.
+
+With $T_z$ the lattice translations, use $P_p=L^{-3}\sum_{z\in(\mathbb Z/L)^3}e^{-ip\cdot z}T_z$ and $p_1=(2\pi/L,0,0)$ in fine-link units. Let $E_0$ be the vacuum energy. At rest use the lowest \emph{excited} state on the chosen lightest glueball branch, orthogonal to the vacuum in the neutral sector. At $p_1$ use the same branch under the momentum little group, for example by tracking poles of the same scalar glueball two-point function. Accidental crossings or multiparticle thresholds require a separate identification. For real positive radicand take the positive square root of
+\[
+ c_L^2=\frac{(E_1(p_1)-E_0)^2-(E_1(0)-E_0)^2}{|p_1|^2}.
+\]
+\Section{Free clock and finite-size error}
+For a free branch with squared gap $m^2+4\sum_i\sin^2(p_i/2)$, rest-mass subtraction gives the exact axial clock $c_L=\sin t/t$, $t=\pi/L$. For $L\ge2$,
+\[
+ 0\le c_L-(1-t^2/6)\le t^4/120 .
+\]
+Integrating the sine and cosine polynomial bounds, or using the alternating series on $[0,\pi/2]$, proves the estimate. Lean proves the inequalities and their application to the specified gaps for arbitrary $m\ge0$. This computation tests the free dispersion relation. Identifying that branch with a singlet excitation of the full torus Hamiltonian requires a spectral argument for the gauge constraints and zero modes. The interacting assertion requires constants $U,V$ independent of $L,g$ with $|c_L-c|\le (U+Vg^4)L^{-2}$. The $L^{-2}$ correction belongs with lattice artifacts and vanishes in the infinite-volume definition of $c_1$.
+
+\Section{The tree pole of the exact two-link block}
+Linearization gives $B_i(n)=A_i(2n)+A_i(2n+\hat i)$ in link units. At coarse physical momentum $p$ there are eight aliases $q_r=p+\pi r/a$, $r\in\{0,1\}^3$, modulo the fine zone. In the two-time free correlator each transverse diagonal contribution is proportional to
+\[
+ |1+e^{iaq_{r,i}}|^2 P^T_{ii}(q_r)
+ \frac{e^{-\omega(q_r)|t|}}{2\omega(q_r)},\qquad
+ \omega(q)=\frac{2}{a}\sqrt{\sum_j\sin^2(aq_j/2)} .
+\]
+The weights are nonnegative. At small nonzero $p$ choose a polarization with transverse overlap. The $r=0$ residue survives, while every other visible pole stays at energy of order $1/a$. The slow pole has $\omega(p)/|p|=1+O(a^2|p|^2)$ in inherited physical time. This gives the tree pole in inherited physical time. W2b.9 states this speed for the free coarse theory when $|p|a_{k+1}\ll1$, providing the order-$g^0$ dispersion input to W2a-R.6 [4]. The one-loop target and its two open inputs are specified on page 4.
+
+\clearpage
+\Title{Spectral assumptions for one-loop dispersion}
+The supplied W2 extract [4] lists W2b.9 as proved and W2d.7 as an expected implication. W2b.9 supplies the tree-level input to R.6. W2b.10 supplies the free finite-box formula in R.5, and W2b.11 places the first relative tree-level artifact at order $(a_k|p|)^2$. The symbol-level declaration \code{W2.W2b.blocked_symbol_speed} is a W2b Part 8 target under a closed-form covariance hypothesis. The W2a-R audit covers the shared sinc theorem.
+
+\Section{Momentum-resolved gaps in physical time}
+Use the same centre-neutral excitation branch at rest and in motion. Choose an observable $f_p$ with nonzero overlap on that branch, remove its vacuum component and project out any lower branches. Let $C_p(t)$ be its connected two-time correlation in physical time. If a self-adjoint effective generator $K_{k+1}$ realizes those dynamics in $L^2(\nu_k)$, normalize its ground energy to zero. Then
+\[
+ C_p(t)=\langle f_p,e^{-tK_{k+1}} f_p\rangle_{\nu_k},\qquad
+ \Delta_k(p)=-\lim_{t\to\infty}\frac1t\log\frac{C_p(t)}{C_p(0)} .
+\]
+The spectral representation makes $\Delta_k(p)$ the lowest gap with overlap in that projected channel. At allowed nonzero $p$, measure the speed by the positive square root of $[\Delta_k(p)^2-\Delta_k(0)^2]/|p|^2$. The finite-box definition on page 3 uses $p=p_1$. The physical clock takes the low-momentum limit along the chosen branch. A time rescaling preserves $\nu_k$ but changes these gaps. Specifying inherited two-time correlations, or a generator that reproduces them, therefore fixes the time normalization.
+
+\Section{The W2d inputs}
+For a reference observable $F$, pull back by the finite-volume transport $\Phi_k$ to $u=F\circ\Phi_k$. Let $J$ lift this coarse observable to the fine space. In the normalization of the extract, define the defect and reference energy excess by
+\begin{align*}
+ D_k(F)&=r_k^{-1}\mathcal E_k(Ju,Ju)-\mathcal E_{k+1}(F,F),\\
+ R_k(F)&=\mathcal E_{k+1}(F,F)-m\,\mathrm{Var}_{\mu_{k+1}}(F)\ \ge 0.
+\end{align*}
+The vacuum laws and transport are independent of the clock. A comparison of speeds uses the corresponding momentum channels with physical time fixed.
+
+\textbf{W2d.2} asks for a small-field lower bound uniform in box, scale and cutoff,
+\[
+ D_k^{\rm small}(F)\ \ge\ -\tfrac12 R_k(F)
+ -\bigl[C_S g_k^4+C_a(a_km)^2\bigr]m\,\mathrm{Var}_{\mu_{k+1}}(F).
+\]
+\textbf{W2d.4} proposes that the coefficient of $g_k^2$ in the small-field loss $\alpha_k$ is a linear combination of the mean-coupling mismatch $\bar\kappa$ and the physical-clock mismatch $\kappa_{\rm phys}$. The proposed cancellation uses the prescribed decrement $A$ and the physical clock. W2d.7 requires the absence of that order in the low-momentum defect.
+
+W2d.7 proposes that these estimates give the speed $\cR(g_k)[1+O(g_k^4)]+O((a_k|p|)^2)$ for the effective dispersion. A one-sided form bound alone leaves room for an upward shift. The argument must control the momentum-dependent gap of the selected branch in the same time units. The extract supplies the targets and their status. R.7 is open, and the Lean composition result uses \code{DispersionHyp}.
+
+\clearpage
+\Title{The Wilson reference coefficient}
+Use weak background fields for the Wilson Kogut--Susskind Hamiltonian in continuous time. Define $Z_E$ and $Z_B$ as the electric and magnetic kinetic coefficients of the background transverse two-point function after removing the temporal and spatial lattice-spacing weights. The local quadratic part is $Z_E\omega_E^2+Z_B\mathbf p^2$ in physical coordinates. With a common infrared regulator, subtract the common rotationally invariant logarithm before extracting either coefficient. Write $Z_i=1+g^2\Pi'_i(0)+O(g^4)$. Continuation to the pole gives
+\[
+ c^2=Z_B/Z_E,\qquad c_1=\tfrac12[\Pi'_B(0)-\Pi'_E(0)] .
+\]
+The calculation evaluates the published one-loop background-field kernel of Karsch, equation (2.22) and Appendix A [2]. It uses its continuous-time limit, which Karsch relates to the Hamiltonian calculation of Hasenfratz and Hasenfratz [3]. This is a calculation of the dimension-four time normalization of the Wilson action. Its application to the physical branch uses the perturbative matching of its long-distance propagation.
+
+\Section{Continuous frequency and spatial integrals}
+Take $\chi=a/a_\tau\to\infty$ at fixed spatial lattice. Write $x_i=aq_i/2$, $X_i=\sin^2x_i$, $b^2=X_1+X_2+X_3$ and $\langle f\rangle=(2/\pi)^3\int_{[0,\pi/2]^3}f\,d^3x$. The dimensionless Euclidean frequency runs over the real line. Its elementary contractions include $\int d\omega/(2\pi)(\omega^2+b^2)^{-1}=1/(2b)$ and $\int d\omega/(2\pi)(\omega^2+b^2)^{-2}=1/(4b^3)$. The frequency-integrated Hamiltonian kernels from (A.2)--(A.6) are
+\[
+ I_1=\langle b\rangle,\quad I_{2a}=I_{2b}=I_2=\langle 1/b\rangle,\quad
+ I_3=\left\langle\frac{X_1X_2}{b^3}\right\rangle,\quad
+ I_4=\left\langle\frac{\sin^2(2x_1)}{b^3}\right\rangle .
+\]
+The terms multiplying $\chi^{-1}$ and $\chi^{-2}$ vanish. After the common subtraction the one-loop coefficients in Karsch's convention are
+\[
+ h_E= I_2/144,\qquad
+ h_B=(1-N^{-2})I_1/24-5I_2/288+I_3/48+I_4/128 .
+\]
+Indeed $1/64-5/576=1/144$ in the electric channel. The factor $1/(4g_s^2)-Nh_i$ in the action gives $Z_i=1-4Ng_s^2h_i$ through this order. With $g_s^2=2g^2$,
+\[
+ \boxed{\ c_1=-4N\left[\frac{1-N^{-2}}{24}I_1-\frac7{288}I_2+
+                       \frac1{48}I_3+\frac1{128}I_4\right].\ }
+\]
+\Section{A second representation for numerical verification}
+Integration of $\partial_{x_1}(\sin(2x_1)/b)$ over the octant has zero boundary term and gives $I_4=4I_2-8I_1/3$. Expanding $b^4=(\sum X_i)^2$ gives $I_3=I_2/3-I_1/6$. Hence $c_1=\alpha N+\beta/N$, with $\alpha=-(5I_1+4I_2)/72$ and $\beta=I_1/6$. This group dependence follows from the kernel before inserting either group.
+
+For an independent quadrature, put $F(t)=[e^{-t/2}I_0(t/2)]^3$, where $I_0$ is the modified Bessel function. Laplace representations and factorization over the spatial axes give \[ I_1=\frac{1}{\sqrt{\pi}}\int_0^\infty\frac{1-F(s^2)}{s^2}\,ds,\qquad I_2=\frac{2}{\sqrt{\pi}}\int_0^\infty F(s^2)\,ds.\] This checks the numerical integration separately from the tensor decomposition.
+
+\clearpage
+\Title{Matching, constants and regularity}
+The spatial quadrature splits the octant by its largest coordinate and maps each sector to $(t,tu,tv)$, with Jacobian $t^2$. Orders 20, 32 and 48 agree in the quoted digits. The limiting moments are $I_1=1.19380112143$, $I_2=0.91068810329$, $I_3=0.10459584752$ and $I_4=0.45928275601$. They give $\alpha=-0.13349663917$, $\beta=0.19896685357$.
+
+\begin{center}
+\begin{tabular}{@{}lrr@{}}\toprule
+\lab{Hamiltonian limit, B2 normalization} & \lab{SU(2)} & \lab{SU(3)}\\\midrule
+$c_1$ from the three-dimensional kernel & $-0.167509851556$ & $-0.334167632989$\\
+$c_1$ from the Bessel representation & $-0.167509851556$ & $-0.334167632989$\\
+Printed $c_\sigma(\infty)$ & $0.09958$ & $0.18018$\\
+Printed $c_\tau(\infty)$ & $-0.06798$ & $-0.15405$\\
+Converted $c_\tau(\infty)-c_\sigma(\infty)$ & $-0.16756$ & $-0.33423$\\
+Absolute difference & $0.00005014844$ & $0.00006236701$\\
+Relative difference & $0.02993\%$ & $0.01866\%$\\\bottomrule
+\end{tabular}
+\end{center}
+The tuned Hamiltonian-limit coupling ratio $g_\sigma/g_\tau$ expands as $1+(g_s^2/2)(c_\tau-c_\sigma)$. This supplies the printed comparison after stripping the geometric factors. The positive $\chi=1$ differences $0.18162$ and $0.33356$ in the prompt concern derivatives with respect to anisotropy. Evaluating the full finite-$\chi$ integrands gives a vanishing electric--magnetic contrast at $\chi=1$ and a value at $10^9$ within $3\times10^{-10}$ of the Hamiltonian result. Karsch's (2.26b,c) printed entries permit at most $10^{-5}$ combined error from rounding to five decimal places. The three-digit agreement and the finer discrepancy are both reproduced. The origin of the discrepancy is unresolved. Both quadratures test the same published diagrammatic kernel.
+
+\Section{The numerical constants at $g_*^2=1/6$}
+For the physical reference, $C_\xi^A$ still needs $B$ and a uniform $M_c$. The illustration below uses the explicitly specified one-loop model $B=0$, $c(x)=1+c_1x$. Its reciprocal has $M_c=c_1^2/(1-|c_1|x_*)$. The Scheme B column follows from its stated smallness conditions.\par
+\begin{center}
+\begin{tabular}{@{}lrrrr@{}}\toprule
+& $A$ & $C_\xi^B$ & model $C_\xi^A$ & model $M_{\match}^B$ bound\\\midrule
+SU(2)&0.1287559034&0.12940729&0.08344827&0.06075567\\
+SU(3)&0.1931338551&0.38723450&0.33069506&0.25982984\\\bottomrule
+\end{tabular}\end{center}
+Both coefficients are negative. At small $x$, $c(x)<1$, $1/c(x)>1$ and the UV-to-IR product $Z_{\rm clock}:=\prod_k F(x_k,1)=c(x_0)/c(x_J)$ exceeds one at leading nontrivial order. A formula transporting units in the reverse direction uses the reciprocal. The W2a gap bound uses the endpoint multiplier $z_L$.
+
+\Section{Optional Wilson truncation and nonperturbative regularity}
+R.9 is \emph{not needed under the clock-reading rule}. A Wilson-local truncation would require $\Delta c_{\rm irr}$ and $\kappa_{\rm local}=(\kappa_E-\kappa_B)/2$. No value has been assigned to that shift.
+
+For R.10 carry the hypothesis $H_c$ of a positive normalized $C^2$ speed in $x$, $|c(x)-1-c_1x|\le M'_c x^2$, and a uniform finite-box estimate as on page 3. If $c\ge m>0$ on $[0,x_*]$, an admissible inverse bound is $M_c=[c_1^2+(1+|c_1|x_*)M'_c]/m$, by multiplying the remainder by $c$. Establishing these inputs for the interacting model remains open. At the strong endpoint one must separately define and control $z_L=1/\cR(g_L)$. The weak expansion has domain $g\le g_*$.
+
+\clearpage
+\Title{Formal verification of the released declarations}
+All module theorems below inhabit the exact propositions in the retained review packet. L1 denotes a mathematical implication proved in Lean. L2 also takes the named physical or trajectory input. Transitive axiom inspection found only \code{propext}, \code{Classical.choice} and \code{Quot.sound}. No released theorem depends on a proof placeholder.
+
+\begin{tabularx}{\linewidth}{@{}p{.31\linewidth}Yc@{}}\toprule
+\lab{Target} & \lab{Lean declaration (namespace abbreviated)} & \lab{Code}\\\midrule
+W2a Proposition 1 & \code{time_unit_scaling} & L1\\
+W2a Corollary 2 & \code{kinetic_ratio_clock} & L1\\
+W2a Lemma 6 / Corollary 7 & \code{first_order_compat}, \code{no_regular_clock} & L1\\
+W2a Theorem 4, product & \code{drift_gamma_identity} & L1\\
+W2a Theorem 4, asymptotic & \code{drift_asymptotic} (stretch target) & L1\\
+W2a Theorem 8 / Corollary 9 & \code{clock_step_bound}, \code{clock_product_telescope} & L1\\
+W2a Theorem 15 & \code{physical_clock_composes} & L2\\
+W2a Proposition 18 & \code{intermediate_step_count} & L1\\
+W2a Theorem 12 & \code{transfer_bound} & L2\\
+W2a-R.1, two schemes & \code{step_error_schemeA}, \code{step_error_schemeB} & L1\\
+W2a-R.2 & \code{isotropic_telescopes} & L2\\
+W2a-R.3, coefficient criterion & \code{drift_iff_kappa_ne_zero} & L1\\
+W2a-R.5, free / W2b.10 & \code{W2.Common.free_clock_sinc_bounds} & L1\\
+SU(2), SU(3) running constant & \code{W2.Common.A_enclosure} & L1\\\bottomrule
+\end{tabularx}
+The unqualified names above are in \code{W2.W2aR}. Theorem 15 uses \code{DispersionHyp} and \code{ClockRegularityHyp}. R.2 assumes clock regularity and works with the physical ratio obtained from Theorem 15. Theorem 12 assumes \code{RunningBoundHyp} and explicit per-step loss and endpoint inequalities. It derives the loss sum and the ultraviolet bound
+\[
+ v_0\ge z_Lm_{\IR}b_{\rm int}\exp[-S/(1-r)],\quad
+ S=(C_4+C_LD_\delta)(x_*^2+x_*/A_-)+\tfrac43 C_a(a_w\bar m)^2,
+ \quad D_\delta=\left(\frac4{ec\delta}\right)^{4/\delta}.
+\]
+The proof bounds the running sum by telescoping increments, sums the squared spacings with ratio $1/4$, and uses $-\log(1-t)\le t/(1-r)$ for $0\le t\le r<1$.
+
+\Section{Analytic scope and verification record}
+R.4 is a physical sector definition with its squared-gap expression implemented in \code{boxClockSq}. The interacting part of R.5, the physical pole argument R.6, the open R.7, the perturbative calculation R.8, the optional R.9 and the open R.10 carry no Lean proof of their physical assertions. The hypotheses keep them visible to downstream work.
+
+Lean checked 26 prelude declarations and the shared free theorem before the statement freeze. All six module returns passed against the sixteen frozen target propositions. The checker compared each compiler transcript and axiom record, then extracted the accepted module. The final packet checks all seventeen released declarations using only Mathlib and its dependencies. A second run in an empty directory reproduced the local transcript byte for byte. The run record is in \code{records/w2ar-v1/}, including \code{final.local.out}. The separate hosted run is pending. Its ready-to-paste file is \code{packets/W2aR_final.txt}.
+
+\clearpage
+\Title{Numerical checks and reproducibility}
+\Section{All 48 physical clock products}
+Use $x_k=[6+A(K-k)]^{-1}$ and $c(x)=1+c_1x$. Entries give the product from $k=0$ to $K-1$. Direct multiplication and the independent endpoint quotient agree within $1.54\times10^{-14}$ in double precision. The last row gives the UV limit for either group. Full precision and individual residuals are in \code{numerical/clock_products.csv}.
+\begin{center}\small
+\begin{tabular}{@{}llrrrrrr@{}}\toprule
+& & \multicolumn{6}{c}{Trial $c_1$}\\
+Group & $K$ & $-0.20$ & $-0.10$ & $-0.05$ & $+0.05$ & $+0.10$ & $+0.20$\\\midrule
+\ProductRows
+\bottomrule\end{tabular}\end{center}
+
+\Section{Four finite boxes}
+\begin{center}\small
+\begin{tabular}{@{}rrrrr@{}}\toprule
+$L$ & measured free mode & $\sin(t)/t$ & $c_L-1+t^2/6$ & $t^4/120$\\\midrule
+\FreeRows
+\bottomrule\end{tabular}
+\end{center}
+The free-mode calculation applies the periodic nearest-neighbour Laplacian to its first Fourier vector. The formula check evaluates sinc independently. Eight additional axial and diagonal blocked-mode tests in \code{blocked_free_modes.csv} check the visible pole against the fine energy.
+
+\Section{Project and source references}
+From the project directory, \code{python3 scripts/replay.py} rebuilds Lean and checks the six returns and the final packet. \code{python3 scripts/validate_w2ar.py} regenerates the numerical tables. The seven original W2a validation programs passed 46 of 46 tests. Their per-declaration cross-references are in \code{validation/README.md}. Python uses NumPy, SciPy, SymPy and mpmath. The archive pins Lean 4.36.0 and Mathlib revision \code{fc4f59e577feb1a4956671bc04ac18aaaf8cd842}.
+
+[1] R. Cooperman and A.E. Petrunina V.V., \emph{Two-Coupling One-Loop Matching and the Running Time Unit under Spatial Blocking in SU(N) Lattice Yang--Mills} (2026), especially Definitions 3--5, Theorems 4, 8, 12, 15 and Corollary 16. \href{https://doi.org/10.5281/zenodo.24395118}{W2a paper and validation record}.
+
+[2] F. Karsch, \emph{SU(N) gauge theory couplings on asymmetric lattices}, Nucl. Phys. B \textbf{205} (1982), 285--300. See (2.22)--(2.27) and (A.1)--(A.9). \href{https://doi.org/10.1016/0550-3213(82)90390-X}{Journal DOI} and \href{https://noah.nrw/ubbihs/download/pdf/5114815}{primary paper}.
+
+[3] A. Hasenfratz and P. Hasenfratz, \emph{The scales of Euclidean and Hamiltonian lattice QCD}, Nucl. Phys. B \textbf{193} (1981), 210--220. \href{https://doi.org/10.1016/0550-3213(81)90526-5}{Journal DOI}.
+
+[4] R. Cooperman and A.E. Petrunina V.V., \emph{Proposition W2b.9 and Theorem W2d.7}, extract from the revised W2 prompt, 21 November 2026. Sections 1--3 cover W2b Part 7 and W2d Parts 3, 4 and 6. The supplied extract is included in \code{report/references/}.
+\clearpage
+\Title{Repository, citation and licence}
+Roger Cooperman and A.E. Petrunina V.V., \emph{The Physical Clock under Spatial Blocking in SU(N) Lattice Yang--Mills}, XISOSIS, Vienna, 22 November 2026.\\
+GitHub repository \code{[GITHUB_URL]} \quad Archival DOI \code{[DOI]}.
+\Section{MIT License}
+SPDX-License-Identifier: MIT
+
+Copyright (c) 2026 Roger Cooperman; A.E. Petrunina V.V.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+\end{document}

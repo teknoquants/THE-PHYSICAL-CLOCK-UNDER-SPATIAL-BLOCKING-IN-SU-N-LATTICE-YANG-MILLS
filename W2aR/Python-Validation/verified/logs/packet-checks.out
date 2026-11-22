@@ -1,0 +1,11 @@
+CHECK PASSED | prelude | 26 axiom records
+CHECK PASSED | W2/Common/Trig.lean | 1 axiom record
+CHECK PASSED | W2/Common/Constants.lean | 2 axiom records
+CHECK PASSED | W2/W2aR/TimeUnit.lean | 3 axiom records
+CHECK PASSED | W2/W2aR/Matching.lean | 5 axiom records
+CHECK PASSED | W2/W2aR/Drift.lean | 4 axiom records
+CHECK PASSED | W2/W2aR/Clock.lean | 5 axiom records
+CHECK PASSED | W2/W2aR/Threshold.lean | 3 axiom records
+CHECK PASSED | W2aR_final | 17 axiom records
+AUDIT PASSED | 17 declarations | 14 L1 | 3 L2
+ISOLATED CHECK PASSED | 17 declarations | project W2 libraries excluded

@@ -1,0 +1,3 @@
+'W2.Common.free_clock_sinc_bounds' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.Common.A_enclosure' depends on axioms: [propext, Classical.choice, Quot.sound]
+"W2 packet 765c5c73aee171323c03a8717a27c4e05515ba1ddcdf84cf7c69cc5f2c5d7c9b"

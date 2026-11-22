@@ -1,0 +1,18 @@
+W2.Common.A_enclosure.statement : Prop
+W2.W2aR.time_unit_scaling.statement : Prop
+W2.W2aR.kinetic_ratio_clock.statement : Prop
+W2.W2aR.first_order_compat.statement : Prop
+W2.W2aR.no_regular_clock.statement : Prop
+W2.W2aR.step_error_schemeA.statement : Prop
+W2.W2aR.step_error_schemeB.statement : Prop
+W2.W2aR.drift_gamma_identity.statement : Prop
+W2.W2aR.drift_asymptotic.statement : Prop
+W2.W2aR.drift_iff_kappa_ne_zero.statement : Prop
+W2.W2aR.clock_step_bound.statement : Prop
+W2.W2aR.clock_product_telescope.statement : Prop
+W2.W2aR.physical_clock_composes.statement : Prop
+W2.W2aR.isotropic_telescopes.statement : Prop
+W2.W2aR.intermediate_step_count.statement : Prop
+W2.W2aR.transfer_bound.statement : Prop
+'W2.Common.free_clock_sinc_bounds' depends on axioms: [propext, Classical.choice, Quot.sound]
+"W2 final-review 9772df065518478965c86bdc743f7e77d01844c29eed04d0a4c9ad2fdb90eea1"

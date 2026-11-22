@@ -1,0 +1,6 @@
+'W2.PaperValidation.gap_shift_invariant' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.PaperValidation.alias_energy_separation' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.PaperValidation.free_phase_enclosure' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.PaperValidation.kernel_group_dependence' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.PaperValidation.local_shift_derivative' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.PaperValidation.reciprocal_remainder' depends on axioms: [propext, Classical.choice, Quot.sound]

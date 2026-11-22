@@ -1,0 +1,62 @@
+⚠ [18270/18302] Built W2.W2f.Assembly (48s)
+warning: W2/W2f/Assembly.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18271/18302] Built W2.W2f.Constants (48s)
+warning: W2/W2f/Constants.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18272/18302] Built W2.W2f.Master (48s)
+warning: W2/W2f/Master.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18273/18302] Built W2.W2d.FreeCheck (38s)
+warning: W2/W2d/FreeCheck.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18274/18302] Built W2.W2e.ClockInvariance (38s)
+warning: W2/W2e/ClockInvariance.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18275/18302] Built W2.W2e.Loss (38s)
+warning: W2/W2e/Loss.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18276/18302] Ran W2.W2f.Assembly:irArts
+warning: W2/W2f/Assembly.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18277/18302] Ran W2.W2f.Constants:irArts
+warning: W2/W2f/Constants.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18278/18302] Ran W2.W2f.Master:irArts
+warning: W2/W2f/Master.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18279/18302] Built W2.W2c.EliminatedGap (36s)
+warning: W2/W2c/EliminatedGap.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18280/18302] Built W2.W2d.Retained (36s)
+warning: W2/W2d/Retained.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18281/18302] Built W2.W2d.Artifact (36s)
+warning: W2/W2d/Artifact.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18282/18302] Built W2.W2c.DimensionCount (34s)
+warning: W2/W2c/DimensionCount.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18283/18302] Built W2.W2b.Normalization (34s)
+warning: W2/W2b/Normalization.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18284/18302] Built W2.W2b.Symbol (34s)
+warning: W2/W2b/Symbol.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18285/18302] Built W2.Framework.Schur (20s)
+warning: W2/Framework/Schur.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18286/18302] Ran W2.Framework.Schur:irArts
+warning: W2/Framework/Schur.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18287/18302] Built W2.W2b.GapRatio (20s)
+warning: W2/W2b/GapRatio.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18288/18302] Ran W2.W2b.GapRatio:irArts
+warning: W2/W2b/GapRatio.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18289/18302] Built W2.W2b.Artifact (20s)
+warning: W2/W2b/Artifact.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18290/18302] Ran W2.W2b.Artifact:irArts
+warning: W2/W2b/Artifact.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18291/18302] Ran W2.W2b.Normalization:irArts
+warning: W2/W2b/Normalization.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18292/18302] Ran W2.W2b.Symbol:irArts
+warning: W2/W2b/Symbol.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18293/18302] Ran W2.W2c.DimensionCount:irArts
+warning: W2/W2c/DimensionCount.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18294/18302] Ran W2.W2c.EliminatedGap:irArts
+warning: W2/W2c/EliminatedGap.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18295/18302] Ran W2.W2d.Retained:irArts
+warning: W2/W2d/Retained.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18296/18302] Ran W2.W2d.Artifact:irArts
+warning: W2/W2d/Artifact.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18297/18302] Ran W2.W2d.FreeCheck:irArts
+warning: W2/W2d/FreeCheck.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18298/18302] Ran W2.W2e.ClockInvariance:irArts
+warning: W2/W2e/ClockInvariance.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+⚠ [18299/18302] Ran W2.W2e.Loss:irArts
+warning: W2/W2e/Loss.lean: imports `Mathlib` from package `mathlib`, which is designed for use with the module system; consider adding `module` to the start of this file
+✔ [18300/18302] Built W2 (8.6s)
+Build completed successfully (18302 jobs).

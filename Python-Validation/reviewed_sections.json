@@ -1,0 +1,12 @@
+{
+  "1  Introduction and conventions": "e6d3b68105f8503f9205448233a45f6e5fdfdf0562940f96bccf2801ef7c17a3",
+  "2  Exact and linearized clock matching": "b91a37616e7632b37879120bc1d6eff92e26eeda80332726e614d1c34b24bbab",
+  "3  Endpoint transport and the criterion for drift": "67c5ba183c1842758539984dc580887128e29f58839150973057981f0174a8d3",
+  "4  A finite-volume definition of the physical speed": "c10573cfbeaeb4f846a4a6011c6b66e7999f1848212c4a4e132a73210301969e",
+  "5  The low-energy pole of the spatial block": "d09d8fd8f9f932846b7b25baf54f08ec9bd7b97f120d70ab3c48cdd6adbd0ea5",
+  "6  The Wilson reference coefficient at one loop": "21d2a3639e46848cee520216b438e5b86a1bb27d76ada953bc7e0059a075e51c",
+  "7  Numerical results and comparison with published values": "27c7f3955c076e6c98c559bd1c244ac36c803c61c0458fcd34fcf510ff19780b",
+  "8  Wilson truncation and the domain of the clock": "e37a23ca4c49013687959f1495e393ac490261f60950585edcba2a252478c04f",
+  "9  Formal verification and reproducibility": "7fc9724f24649ca085d2911cb37e7e970b749ffc19c6385a5b93616adc1658d0",
+  "Appendix A  Numerical checks and reproduction": "a23d9dbd98c5a6f3fe04cd1afbfb2d34fc7f18773bb9dbc62a5d3a5257908cf5"
+}

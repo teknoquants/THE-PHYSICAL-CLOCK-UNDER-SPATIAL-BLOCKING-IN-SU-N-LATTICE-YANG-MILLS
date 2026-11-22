@@ -1,0 +1,14 @@
+PASS | rejected edited prelude packet | Return changed frozen text outside an editable proof.
+PASS | rejected edited MIT notice | Return changed frozen text outside an editable proof.
+PASS | rejected unfilled Trig return | Unresolved proof placeholder.
+PASS | rejected weakened Trig statement | Return changed frozen text outside an editable proof.
+PASS | an alternate indented proof is accepted by the freeze comparator
+PASS | rejected changed statement | Return changed frozen text outside an editable proof.
+PASS | rejected changed prelude | Return changed frozen text outside an editable proof.
+PASS | rejected placeholder return | Unresolved proof placeholder.
+PASS | rejected wrong module return | Proof slot names changed.
+PASS | rejected unbalanced proof boundaries | Duplicate, missing or malformed proof boundaries.
+PASS | rejected altered final source | Return changed frozen text outside an editable proof.
+PASS | rejected extra axiom | W2.Common.free_clock_sinc_bounds uses disallowed axioms {'extraAxiom'}
+PASS | rejected missing theorem output | Missing, unexpected or out-of-order axiom records.
+PASS | rejected missing terminal stamp | Missing terminal packet stamp.

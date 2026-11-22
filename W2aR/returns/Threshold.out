@@ -1,0 +1,4 @@
+'W2.Common.free_clock_sinc_bounds' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.W2aR.intermediate_step_count' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.W2aR.transfer_bound' depends on axioms: [propext, Classical.choice, Quot.sound]
+"W2 packet d0db2bc57bd6f85c55ab19aa53847603bc3714678f2a57685df64df3642d531c"

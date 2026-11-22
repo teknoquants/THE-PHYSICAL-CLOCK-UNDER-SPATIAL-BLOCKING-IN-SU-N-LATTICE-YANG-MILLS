@@ -1,0 +1,5 @@
+'W2.Common.free_clock_sinc_bounds' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.W2aR.drift_gamma_identity' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.W2aR.drift_asymptotic' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.W2aR.drift_iff_kappa_ne_zero' depends on axioms: [propext, Classical.choice, Quot.sound]
+"W2 packet 028754acf636ed38eb8ad9d8466e0cce31860cf954af0f70d73fdd0d2c531770"

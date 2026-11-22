@@ -1,0 +1,22 @@
+Historical record of the supplied pre-licensing attachments. Their digests refer to those original files. Current licensed files are identified in the project SHA256SUMS.
+
+Uploaded ZIP SHA-256 a06c4fcc11584a65bc0c8fdfbedd55804539065089634d9fdfdecb4fe9b9f520
+PASS all 115 payload files match the release manifest.
+Uploaded DOCX SHA-256 d4c95f551a3384c9e92b83d3d6339f202661f3700ac916f11c94aa2867a6d232
+Extracted final Lean source SHA-256 bc2ccf0695f305e43812e042a3c0dfc9d5acfef54521d28a03e126719a5f48ec
+Frozen mathematical statement review SHA-256 aab2b25bd2cc9c6be0785f2ea407103eadf9ef63aa814bc03bf0fcd482ac513a
+Supplied dispersion extract SHA-256 4c5ff532424ea03acfcfd8a92cdc41ebb682dd65b2d6c4c7ac6616bf013fa084
+PASS extracted Word source matches both the accepted ZIP and the previously retained final packet, byte for byte.
+Lean (version 4.36.0, x86_64-unknown-linux-gnu, commit 611c117bfaf7b7ae1cfcf246ce6fba31e8f509e9, Release)
+CHECK PASSED | W2/Common/Constants.lean | 2 axiom records
+CHECK PASSED | W2/W2aR/TimeUnit.lean | 3 axiom records
+CHECK PASSED | W2/W2aR/Matching.lean | 5 axiom records
+CHECK PASSED | W2/W2aR/Drift.lean | 4 axiom records
+CHECK PASSED | W2/W2aR/Clock.lean | 5 axiom records
+CHECK PASSED | W2/W2aR/Threshold.lean | 3 axiom records
+CHECK PASSED | W2aR-final | 17 axiom records
+AUDIT PASSED | 17 declarations | 14 L1 | 3 L2
+PASS fresh final compiler output matches the recorded transcript byte for byte.
+Compiler transcript SHA-256 ebdb12521e0314ca04197b1404eaf2ebb1c120566ae1e523f2acc24cac685f9f
+Environment: local Lean process in an empty directory with the W2 project object library excluded.
+The attached Word document contains the final source. A hosted transcript or hosted session URL was not supplied.

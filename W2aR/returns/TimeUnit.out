@@ -1,0 +1,4 @@
+'W2.Common.free_clock_sinc_bounds' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.W2aR.time_unit_scaling' depends on axioms: [propext, Classical.choice, Quot.sound]
+'W2.W2aR.kinetic_ratio_clock' depends on axioms: [propext, Classical.choice, Quot.sound]
+"W2 packet 4c621544ce2f5c2e1ebe71d723db33d139b4fe3ad3e4183a8043659f28c9cd65"

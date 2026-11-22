@@ -1,0 +1,12 @@
+# Preserve the release bytes used by packet replay and proof checks.
+*.lean text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.out text eol=lf
+*.json text eol=lf
+*.tsv text eol=lf
+*.csv -text
+LICENSE text eol=lf
+SHA256SUMS text eol=lf
+lean-toolchain text eol=lf
