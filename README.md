@@ -1,4 +1,4 @@
-# The Physical Clock under Spatial Blocking in SU(N) Lattice Yang–Mills
+DOI:https://doi.org/10.5281/zenodo.24446069 # The Physical Clock under Spatial Blocking in SU(N) Lattice Yang–Mills
 
 Roger Cooperman and A.E. Petrunina V.V. · XISOSIS · Vienna · 22 November 2026 · First draft
 
